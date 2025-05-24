@@ -40,8 +40,8 @@ function App() {
 
                 <div className="w-full h-full flex justify-center items-center overflow-hidden">
                     <Routes>
-                        <Route path="/" element={<HomePage/>}/>
-                        <Route path="/memories" element={<MyMemoriesPage/>}/>
+                        <Route path="/" element={<MyMemoriesPage/>}/>
+                        <Route path="/home" element={<HomePage/>}/>
                         <Route path="/profile" element={<ProfilePage/>}/>
                         <Route path="/settings" element={<SettingsPage/>}/>
                         <Route path="*" element={<Navigate to="/" replace/>}/>
