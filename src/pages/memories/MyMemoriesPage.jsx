@@ -1,27 +1,58 @@
-import React from 'react';
+import React, { useState }  from 'react';
+import BlurText from '@/components/BlurText'
+import Gallery from '@/components/Gallery'
 
 function MyMemoriesPage() {
-    return (
-        <div className="w-full h-full flex flex-col justify-center items-center bg-yellow-200 p-8">
-            <h1 className="text-3xl font-bold mb-6">My Memories</h1>
+    const [selectedFolder, setSelectedFolder] = useState(null);
+    const [selectedLabel, setSelectedLabel] = useState(null);
 
-            <div className="grid grid-cols-3 gap-4">
-                <img
-                    src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80"
-                    alt="Memory 1"
-                    className="rounded-lg shadow-lg"
-                />
-                <img
-                    src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=400&q=80"
-                    alt="Memory 2"
-                    className="rounded-lg shadow-lg"
-                />
-                <img
-                    src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=400&q=80"
-                    alt="Memory 3"
-                    className="rounded-lg shadow-lg"
-                />
+    const albums = [
+        { folder: 'high-school-yearbook-photo', label: 'Kỷ yếu Cấp 3' },
+        { folder: 'high-school-normal-photo', label: 'Những kỷ niệm Cấp 3' },
+        { folder: 'couple', label: 'Ảnh Couple nè !' },
+        { folder: 'bf', label: 'Bạn thân' },
+        { folder: 'me', label: 'Ảnh của tui' },
+        { folder: 'noble-team', label: 'Noble Team' },
+        { folder: 'university', label: 'Ảnh đại học' },
+        { folder: 'tom-dev-team', label: 'Ảnh Tom Dev Team' },
+        { folder: 'self-defense-militia-in-vietnam', label: 'Dân quân tự vệ' },
+        { folder: 'my-teenage-years', label: 'Ảnh trẻ trâu' },
+        { folder: 'middle-school', label: 'Ảnh cấp 2' },
+    ];
+
+    const handleAnimationComplete = () => {
+        console.log('Animation completed!');
+    };
+
+    return (
+        <div className="w-full h-full flex flex-col justify-start items-center p-8 bg-black overflow-y-scroll">
+            <BlurText
+                text={selectedLabel ?? 'This is My Memories !!'}
+                delay={150}
+                animateBy="words"
+                direction="top"
+                onAnimationComplete={handleAnimationComplete}
+                className="text-3xl text-white mb-8"
+            />
+            <div className="flex flex-wrap gap-4 mb-8 justify-center">
+                {albums.map(({folder, label}) => (
+                    <button
+                        key={folder}
+                        onClick={() => {
+                            setSelectedFolder(folder)
+                            setSelectedLabel(label)
+                        }}
+                        className={`px-4 py-2 rounded text-black border font-semibold ${
+                            selectedFolder === folder
+                                ? 'bg-white text-black'
+                                : 'border-white hover:bg-white/20'
+                        } transition`}
+                    >
+                        {label}
+                    </button>
+                ))}
             </div>
+            {selectedFolder && <Gallery folder={selectedFolder}/>}
         </div>
     );
 }
