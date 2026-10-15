@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LuBookOpen, LuCalendarDays, LuChartLine, LuImages, LuLock, LuSettings, LuSunrise } from 'react-icons/lu';
+import { LuBookOpen, LuCalendarDays, LuChartLine, LuCircleAlert, LuCircleCheck, LuEye, LuImages, LuLoaderCircle, LuLock, LuSettings, LuSunrise } from 'react-icons/lu';
 import { useI18n } from '@/i18n/I18nProvider';
 import { forgetUnlock } from '@/lib/auth';
+import { JOURNAL_EDITABLE, JOURNAL_FILE, useSaveStatus } from '@/store/journalStore';
 
 const LINKS = [
     { to: '/dashboard', key: 'today', icon: LuSunrise, end: true },
@@ -12,6 +13,32 @@ const LINKS = [
     { to: '/dashboard/daily', key: 'daily', icon: LuImages },
     { to: '/dashboard/settings', key: 'settings', icon: LuSettings },
 ];
+
+function SaveIndicator() {
+    const { t } = useI18n();
+    const status = useSaveStatus();
+
+    if (!JOURNAL_EDITABLE) {
+        return (
+            <p className="mb-6 flex items-start gap-2 rounded-xl border border-line bg-ink-900/60 px-4 py-3 text-sm text-muted">
+                <LuEye className="mt-0.5 shrink-0 text-brand-400" />
+                {t('journal.readOnly')}
+            </p>
+        );
+    }
+
+    const icon = {
+        saved: <LuCircleCheck className="text-brand-400" />,
+        error: <LuCircleAlert className="text-danger" />,
+    }[status] ?? <LuLoaderCircle className="animate-spin text-faint" />;
+
+    return (
+        <p className={`mb-6 flex items-center justify-end gap-2 font-mono text-xs ${status === 'error' ? 'text-danger' : 'text-faint'}`}>
+            {icon}
+            {t(`journal.${status === 'error' ? 'error' : status === 'saved' ? 'saved' : 'saving'}`, { file: JOURNAL_FILE })}
+        </p>
+    );
+}
 
 export default function DashboardLayout() {
     const { t } = useI18n();
@@ -61,6 +88,7 @@ export default function DashboardLayout() {
             </aside>
 
             <div className="min-w-0 flex-1">
+                <SaveIndicator />
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={location.pathname}

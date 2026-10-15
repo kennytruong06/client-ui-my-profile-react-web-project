@@ -1,8 +1,15 @@
 import { useSyncExternalStore } from 'react';
 import { todayKey } from '@/lib/date';
 import { DEFAULT_TOPICS, ENGLISH_SKILLS } from '@/data/english';
+import { fromCsv, toCsv } from '@/lib/csv';
+import journalCsv from '@/data/journal/journal.csv?raw';
 
-const STORAGE_KEY = 'kp.journal.v1';
+const LEGACY_STORAGE_KEY = 'kp.journal.v1';
+const API = '/__journal';
+const SAVE_DELAY = 400;
+
+export const JOURNAL_EDITABLE = import.meta.env.DEV;
+export const JOURNAL_FILE = 'src/data/journal/journal.csv';
 
 function emptyState() {
     return {
@@ -13,41 +20,96 @@ function emptyState() {
     };
 }
 
-function load() {
+function normalize(parsed) {
+    const defaults = emptyState();
+    return {
+        ...defaults,
+        ...parsed,
+        english: { ...defaults.english, ...parsed.english },
+        vocab: { ...defaults.vocab, ...parsed.vocab },
+    };
+}
+
+function readFile() {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-            return emptyState();
-        }
-        const parsed = JSON.parse(raw);
-        const defaults = emptyState();
-        return {
-            ...defaults,
-            ...parsed,
-            english: { ...defaults.english, ...parsed.english },
-            vocab: { ...defaults.vocab, ...parsed.vocab },
-        };
+        const rows = fromCsv(journalCsv);
+        return rows.length ? rowsToJournal(rows) : null;
     } catch {
-        return emptyState();
+        return null;
     }
 }
 
-let state = load();
+function readLegacyBrowserData() {
+    try {
+        const raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+        return raw ? normalize(JSON.parse(raw)) : null;
+    } catch {
+        return null;
+    }
+}
+
+const fileState = readFile();
+const legacyState = !fileState && JOURNAL_EDITABLE ? readLegacyBrowserData() : null;
+let state = fileState ?? legacyState ?? emptyState();
 const listeners = new Set();
 
-function persist() {
+let saveStatus = 'saved';
+let saveTimer = null;
+const statusListeners = new Set();
+
+function setSaveStatus(next) {
+    saveStatus = next;
+    statusListeners.forEach((listener) => listener());
+}
+
+export function useSaveStatus() {
+    return useSyncExternalStore((listener) => {
+        statusListeners.add(listener);
+        return () => statusListeners.delete(listener);
+    }, () => saveStatus);
+}
+
+async function flush() {
+    saveTimer = null;
+    setSaveStatus('saving');
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        return true;
+        const response = await fetch(API, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csv: toCsv(journalToRows(state)) }),
+            keepalive: true,
+        });
+        setSaveStatus(response.ok ? 'saved' : 'error');
     } catch {
-        return false;
+        setSaveStatus('error');
+    }
+}
+
+function scheduleSave() {
+    clearTimeout(saveTimer);
+    setSaveStatus('pending');
+    saveTimer = setTimeout(flush, SAVE_DELAY);
+}
+
+if (JOURNAL_EDITABLE) {
+    window.addEventListener('beforeunload', () => {
+        if (saveTimer) {
+            clearTimeout(saveTimer);
+            flush();
+        }
+    });
+    if (legacyState) {
+        scheduleSave();
     }
 }
 
 function commit(next) {
+    if (!JOURNAL_EDITABLE) {
+        return;
+    }
     state = next;
-    persist();
     listeners.forEach((listener) => listener());
+    scheduleSave();
 }
 
 function subscribe(listener) {
