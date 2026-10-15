@@ -1,0 +1,34 @@
+[
+    {
+        "id": "family",
+        "name": "Family"
+    },
+    {
+        "id": "friends",
+        "name": "Friends"
+    },
+    {
+        "id": "love",
+        "name": "Love"
+    },
+    {
+        "id": "travel",
+        "name": "Travel"
+    },
+    {
+        "id": "work",
+        "name": "Work"
+    },
+    {
+        "id": "milestone",
+        "name": "Milestone"
+    },
+    {
+        "id": "f62c7ec4",
+        "name": "Me"
+    },
+    {
+        "id": "4a294939",
+        "name": "Trekking"
+    }
+]

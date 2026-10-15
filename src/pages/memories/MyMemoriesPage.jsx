@@ -1,60 +1,50 @@
-import React, { useState }  from 'react';
-import BlurText from '@/components/BlurText'
-import Gallery from '@/components/Gallery'
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { LuPin } from 'react-icons/lu';
+import PageHeader from '@/components/PageHeader';
+import Gallery from '@/components/Gallery';
+import DailyFeed from '@/components/DailyFeed';
+import { useI18n } from '@/i18n/I18nProvider';
 
-function MyMemoriesPage() {
-    const [selectedFolder, setSelectedFolder] = useState(null);
-    const [selectedLabel, setSelectedLabel] = useState(null);
+const DAILY = 'daily';
+const ALBUMS = [
+    'high-school-yearbook-photo',
+    'high-school-normal-photo',
+    'couple',
+    'bf',
+    'me',
+    'noble-team',
+    'university',
+    'tom-dev-team',
+    'self-defense-militia-in-vietnam',
+    'my-teenage-years',
+    'middle-school',
+];
 
-    const albums = [
-        { folder: 'high-school-yearbook-photo', label: 'Kỷ yếu Cấp 3' },
-        { folder: 'high-school-normal-photo', label: 'Những kỷ niệm Cấp 3' },
-        { folder: 'couple', label: 'Ảnh Couple nè !' },
-        { folder: 'bf', label: 'Bạn thân' },
-        { folder: 'me', label: 'Ảnh của tui' },
-        { folder: 'noble-team', label: 'Noble Team' },
-        { folder: 'university', label: 'Ảnh đại học' },
-        { folder: 'tom-dev-team', label: 'Ảnh Tom Dev Team' },
-        { folder: 'self-defense-militia-in-vietnam', label: 'Dân quân tự vệ' },
-        { folder: 'my-teenage-years', label: 'Ảnh trẻ trâu' },
-        { folder: 'middle-school', label: 'Ảnh cấp 2' },
-    ];
-
-    const handleAnimationComplete = () => {
-        console.log('Animation completed!');
-    };
+export default function MyMemoriesPage() {
+    const { t } = useI18n();
+    const [selected, setSelected] = useState(DAILY);
 
     return (
-        <div className="w-full h-full flex flex-col justify-start items-center p-8 bg-black overflow-y-scroll">
-            <BlurText
-                text={selectedLabel ?? 'This is My Memories !!'}
-                delay={150}
-                animateBy="words"
-                direction="top"
-                onAnimationComplete={handleAnimationComplete}
-                className="text-3xl text-white mb-8"
-            />
-            <div className="flex flex-wrap gap-4 mb-8 justify-center">
-                {albums.map(({folder, label}) => (
+        <div className="mx-auto max-w-6xl">
+            <PageHeader title={t('memories.title')} subtitle={t('memories.subtitle')} />
+            <div className="mb-8 flex flex-wrap gap-2">
+                {[DAILY, ...ALBUMS].map((folder) => (
                     <button
                         key={folder}
-                        onClick={() => {
-                            setSelectedFolder(folder)
-                            setSelectedLabel(label)
-                        }}
-                        className={`px-4 py-2 rounded text-black border font-semibold ${
-                            selectedFolder === folder
-                                ? 'bg-white text-black'
-                                : 'border-white hover:bg-white/20'
-                        } transition`}
+                        type="button"
+                        onClick={() => setSelected(folder)}
+                        className={`relative flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${selected === folder ? 'border-brand-500 text-ink-950' : 'border-line text-muted hover:border-line-strong hover:text-white'}`}
                     >
-                        {label}
+                        {selected === folder && <motion.span layoutId="album-pill" className="absolute inset-0 rounded-full bg-brand-500" transition={{ type: 'spring', stiffness: 400, damping: 32 }} />}
+                        {folder === DAILY && <LuPin size={14} className="relative" />}
+                        <span className="relative">{folder === DAILY ? t('memories.daily') : t(`memories.albums.${folder}`)}</span>
                     </button>
                 ))}
             </div>
-            {selectedFolder && <Gallery folder={selectedFolder}/>}
+            <motion.div key={selected} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
+                {selected === DAILY ? <DailyFeed /> : <Gallery folder={selected} />}
+            </motion.div>
         </div>
     );
 }
-
-export default MyMemoriesPage;
