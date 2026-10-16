@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { LuCheck, LuPencil, LuPlus, LuSearch, LuTags, LuTrash2, LuX } from 'react-icons/lu';
 import WordDetails, { PosBadge, SpeakButton } from '@/components/english/WordDetails';
 import { useI18n } from '@/i18n/I18nProvider';
-import { deleteWord, newId, saveTopics, saveWord, useJournal } from '@/store/journalStore';
+import { JOURNAL_EDITABLE, deleteWord, newId, saveTopics, saveWord, useJournal } from '@/store/journalStore';
 import { PARTS_OF_SPEECH, splitList } from '@/data/english';
 
 const EMPTY_WORD = { id: '', word: '', ipa: '', pos: 'noun', meaning: '', synonyms: '', antonyms: '', examples: '', topics: [] };
@@ -187,14 +187,14 @@ export default function VocabularyTab() {
                     <option value="">{t('english.vocab.allPos')}</option>
                     {PARTS_OF_SPEECH.map((pos) => <option key={pos} value={pos}>{t(`english.pos.${pos}`)}</option>)}
                 </select>
-                <button type="button" onClick={() => setShowTopics((value) => !value)} className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition ${showTopics ? 'border-brand-500 text-white' : 'border-line text-muted hover:text-white'}`}>
+                {JOURNAL_EDITABLE && <button type="button" onClick={() => setShowTopics((value) => !value)} className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm transition ${showTopics ? 'border-brand-500 text-white' : 'border-line text-muted hover:text-white'}`}>
                     <LuTags size={16} />
                     {t('english.vocab.manageTopics')}
-                </button>
-                <button type="button" onClick={() => setEditing({})} className="flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-ink-950 transition hover:bg-brand-400">
+                </button>}
+                {JOURNAL_EDITABLE && <button type="button" onClick={() => setEditing({})} className="flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-ink-950 transition hover:bg-brand-400">
                     <LuPlus size={16} />
                     {t('english.vocab.add')}
-                </button>
+                </button>}
             </div>
 
             <AnimatePresence>{showTopics && <TopicManager key="topics" topics={vocab.topics} />}</AnimatePresence>
@@ -239,7 +239,7 @@ export default function VocabularyTab() {
                                             {word.ipa && <span className="font-mono text-sm text-muted">{word.ipa}</span>}
                                             <PosBadge pos={word.pos} />
                                         </div>
-                                        <div className="flex gap-1 opacity-60 transition group-hover:opacity-100">
+                                        {JOURNAL_EDITABLE && <div className="flex gap-1 opacity-60 transition group-hover:opacity-100">
                                             <button type="button" aria-label="Edit" onClick={() => setEditing(word)} className="grid h-8 w-8 place-items-center rounded-lg border border-line text-muted hover:text-white"><LuPencil size={13} /></button>
                                             <button
                                                 type="button"
@@ -249,7 +249,7 @@ export default function VocabularyTab() {
                                             >
                                                 <LuTrash2 size={13} />
                                             </button>
-                                        </div>
+                                        </div>}
                                     </div>
                                     <WordDetails word={word} topics={vocab.topics} showHeader={false} />
                                     {word.reviews && (

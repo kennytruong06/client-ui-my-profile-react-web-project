@@ -9,9 +9,11 @@ import AnimatedNumber from '@/components/AnimatedNumber';
 import CategoryIcon from '@/components/CategoryIcon';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useJournal } from '@/store/journalStore';
-import { computeStats, dayRatio, streaks, verdictKey } from '@/lib/stats';
-import { addDays, todayKey } from '@/lib/date';
+import { computeStats, dayRatio, ratioTone, streaks, verdictKey } from '@/lib/stats';
+import { addDays, formatDuration, todayKey } from '@/lib/date';
 import { CATEGORIES } from '@/data/schedule';
+
+const TIMED_CATEGORIES = CATEGORIES.filter((category) => category !== 'skincare');
 
 const RANGES = { week: 7, month: 30, all: null };
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -43,6 +45,56 @@ function Kpi({ icon: Icon, label, children, delay }) {
     );
 }
 
+function TimeVsTarget({ stats }) {
+    const { t } = useI18n();
+    const overall = stats.totals.targetMinutes ? stats.totals.actualMinutes / stats.totals.targetMinutes : null;
+    const overallTone = ratioTone(overall ?? 0);
+
+    return (
+        <div>
+            <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2 rounded-xl bg-ink-900/60 px-4 py-3">
+                <span className="text-sm text-muted">{t('progress.timeOverall')}</span>
+                <span className="font-mono">
+                    <span className={overall == null ? 'text-faint' : overallTone.text}>{formatDuration(stats.totals.actualMinutes)}</span>
+                    <span className="text-faint"> / {formatDuration(stats.totals.targetMinutes)}</span>
+                    {overall != null && <span className={`ml-2 font-semibold ${overallTone.text}`}>{Math.round(overall * 100)}%</span>}
+                </span>
+            </div>
+            <ul className="space-y-3.5">
+                {TIMED_CATEGORIES.map((category, index) => {
+                    const bucket = stats.byCategory[category];
+                    const ratio = bucket.targetMinutes ? bucket.minutes / bucket.targetMinutes : null;
+                    const tone = ratioTone(ratio ?? 0);
+                    const extra = bucket.minutes - bucket.targetMinutes;
+                    return (
+                        <li key={category} title={`${bucket.minutes} / ${bucket.targetMinutes} ${t('day.minutesUnit')}`}>
+                            <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
+                                <span className="flex items-center gap-2 text-white">
+                                    <CategoryIcon category={category} size={14} className="text-brand-400" />
+                                    {t(`categories.${category}`)}
+                                </span>
+                                <span className="font-mono text-muted">
+                                    {formatDuration(bucket.minutes)} / {formatDuration(bucket.targetMinutes)}
+                                    {ratio != null && <span className={`ml-2 ${tone.text}`}>{Math.round(ratio * 100)}%</span>}
+                                    {ratio != null && extra > 0 && <span className="ml-1 text-brand-300">(+{formatDuration(extra)})</span>}
+                                </span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-ink-800">
+                                <motion.div
+                                    className={`h-full rounded-full ${tone.bar}`}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${Math.min(100, (ratio ?? 0) * 100)}%` }}
+                                    transition={{ delay: index * 0.06, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                                />
+                            </div>
+                        </li>
+                    );
+                })}
+            </ul>
+        </div>
+    );
+}
+
 function percent(done, planned) {
     return planned ? Math.round((done / planned) * 100) : 0;
 }
@@ -56,14 +108,6 @@ export default function ProgressPage() {
     const stats = computeStats(journal, rangeStart, today);
     const { current, best } = streaks(journal, today);
     const verdict = verdictKey(stats.discipline);
-
-    const hours = CATEGORIES.map((category) => ({
-        key: category,
-        label: t(`categories.${category}`),
-        icon: <CategoryIcon category={category} size={14} className="text-brand-400" />,
-        value: stats.byCategory[category].minutes,
-        display: t('common.hours', { n: +(stats.byCategory[category].minutes / 60).toFixed(1) }),
-    }));
 
     const completion = CATEGORIES.map((category) => {
         const bucket = stats.byCategory[category];
@@ -138,8 +182,8 @@ export default function ProgressPage() {
                     <BarList items={completion} max={100} />
                 </Panel>
 
-                <Panel title={t('progress.hoursTitle')} delay={0.15}>
-                    <BarList items={hours} />
+                <Panel title={t('progress.timeTitle')} hint={t('progress.timeHint')} delay={0.15}>
+                    <TimeVsTarget stats={stats} />
                 </Panel>
 
                 <Panel title={t('progress.weekdayTitle')} hint={t('progress.weekdayHint')} delay={0.2}>

@@ -1,27 +1,28 @@
-﻿type,date,key,status,variant,steps,text
-setting,,trackingStart,,,,2026-10-15
-setting,,englishStart,,,,
-day-note,2026-10-15,,,,,This is the first day
-task,2026-10-15,english-am,skipped,,,"Cuz, the schedule has just been done at lunch"
-task,2026-10-15,light-workout,skipped,,,"Cuz, the schedule has just been done at lunch"
-task,2026-10-15,piano-1,done,,,
-task,2026-10-15,guitar-class,done,,,
-task,2026-10-15,guitar-practice,done,,,
-task,2026-10-15,piano-2,done,,,
-task,2026-10-15,skincare,done,,remover|nohalab|pre-serum|serum|cleanser,
-task,2026-10-15,english-lunch,skipped,,,"Cuz, the schedule has just been done at lunch"
-english-day,,1,,,,
-vocab-topic,,travel,,,,Travel
-vocab-topic,,city,,,,City
-vocab-topic,,work,,,,Work
-vocab-topic,,education,,,,Education
-vocab-topic,,technology,,,,Technology
-vocab-topic,,environment,,,,Environment
-vocab-topic,,health,,,,Health
-vocab-topic,,food,,,,Food
-vocab-topic,,daily-life,,,,Daily life
-vocab-topic,,phrases,,,,Phrases
-vocab-topic,,idioms,,,,Idioms
-vocab-topic,,phrasal-verbs,,,,Phrasal verbs
-vocab-topic,,collocations,,,,Collocations
-vocab-topic,,modal-verbs,,,,Modal verbs
+﻿type,date,key,status,variant,steps,text,minutes
+setting,,trackingStart,,,,2026-10-15,
+setting,,englishStart,,,,,
+day-note,2026-10-15,,,,,This is the first day,
+task,2026-10-15,english-am,skipped,,,"Cuz, the schedule has just been done at lunch",
+task,2026-10-15,light-workout,skipped,,,"Cuz, the schedule has just been done at lunch",
+task,2026-10-15,piano-1,done,,,,
+task,2026-10-15,guitar-class,done,,,,
+task,2026-10-15,guitar-practice,done,,,,
+task,2026-10-15,piano-2,done,,,,
+task,2026-10-15,skincare,done,,remover|nohalab|pre-serum|serum|cleanser,,
+task,2026-10-15,english-lunch,skipped,,,"Cuz, the schedule has just been done at lunch",
+task,2026-10-16,workout,done,,pushups=50|squats|shadow|footwork=3|crunches=110,I need to wake up early so I can have more time to focus deeply,
+english-day,,1,,,,,
+vocab-topic,,travel,,,,Travel,
+vocab-topic,,city,,,,City,
+vocab-topic,,work,,,,Work,
+vocab-topic,,education,,,,Education,
+vocab-topic,,technology,,,,Technology,
+vocab-topic,,environment,,,,Environment,
+vocab-topic,,health,,,,Health,
+vocab-topic,,food,,,,Food,
+vocab-topic,,daily-life,,,,Daily life,
+vocab-topic,,phrases,,,,Phrases,
+vocab-topic,,idioms,,,,Idioms,
+vocab-topic,,phrasal-verbs,,,,Phrasal verbs,
+vocab-topic,,collocations,,,,Collocations,
+vocab-topic,,modal-verbs,,,,Modal verbs,

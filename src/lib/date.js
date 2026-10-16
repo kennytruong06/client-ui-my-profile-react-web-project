@@ -65,3 +65,13 @@ export function formatShortDate(key, t) {
     const date = fromKey(key);
     return `${date.getDate()} ${t('monthsShort')[date.getMonth()]}, ${date.getFullYear()}`;
 }
+
+export function formatDuration(totalMinutes) {
+    const minutes = Math.max(0, Math.round(totalMinutes ?? 0));
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    if (hours === 0) {
+        return `${rest}m`;
+    }
+    return rest ? `${hours}h${pad(rest)}` : `${hours}h`;
+}

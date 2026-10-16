@@ -4,7 +4,7 @@ import { LuBookOpen, LuCheck, LuChevronLeft, LuChevronRight, LuExternalLink, LuF
 import PageHeader from '@/components/PageHeader';
 import ScoreChart from '@/components/charts/ScoreChart';
 import { useI18n } from '@/i18n/I18nProvider';
-import { englishLogOf, setEnglishSkillHidden, setEnglishStart, updateEnglishDay, updateEnglishSkill, useJournal } from '@/store/journalStore';
+import { JOURNAL_EDITABLE, englishLogOf, setEnglishSkillHidden, setEnglishStart, updateEnglishDay, updateEnglishSkill, useJournal } from '@/store/journalStore';
 import { ENGLISH_SKILLS, SCORED_SKILLS } from '@/data/english';
 import VocabularyTab from '@/components/english/VocabularyTab';
 import PracticeTab from '@/components/english/PracticeTab';
@@ -56,6 +56,7 @@ function SkillCard({ dayNumber, skill, entry, index }) {
                                 max={40}
                                 inputMode="numeric"
                                 value={entry?.score ?? ''}
+                                readOnly={!JOURNAL_EDITABLE}
                                 onChange={(event) => updateEnglishSkill(dayNumber, skill, { score: event.target.value === '' ? '' : String(Math.max(0, Math.min(40, Number(event.target.value)))) })}
                                 placeholder="—"
                                 className="field w-16 px-2 py-1 text-center font-mono"
@@ -63,22 +64,25 @@ function SkillCard({ dayNumber, skill, entry, index }) {
                             /40
                         </label>
                     )}
-                    <button
-                        type="button"
-                        onClick={() => setEnglishSkillHidden(dayNumber, skill, true)}
-                        title={t('english.removeSkill')}
-                        aria-label={t('english.removeSkill')}
-                        className="grid h-8 w-8 place-items-center rounded-lg border border-line text-faint transition hover:border-danger/50 hover:text-danger"
-                    >
-                        <LuX size={14} />
-                    </button>
+                    {JOURNAL_EDITABLE && (
+                        <button
+                            type="button"
+                            onClick={() => setEnglishSkillHidden(dayNumber, skill, true)}
+                            title={t('english.removeSkill')}
+                            aria-label={t('english.removeSkill')}
+                            className="grid h-8 w-8 place-items-center rounded-lg border border-line text-faint transition hover:border-danger/50 hover:text-danger"
+                        >
+                            <LuX size={14} />
+                        </button>
+                    )}
                 </div>
             </div>
             <textarea
                 rows={3}
                 value={entry?.note ?? ''}
+                readOnly={!JOURNAL_EDITABLE}
                 onChange={(event) => updateEnglishSkill(dayNumber, skill, { note: event.target.value })}
-                placeholder={t(`english.skillPlaceholders.${skill}`)}
+                placeholder={JOURNAL_EDITABLE ? t(`english.skillPlaceholders.${skill}`) : '—'}
                 className="field"
             />
         </motion.div>
@@ -117,8 +121,9 @@ function DayLog({ dayNumber }) {
                 <motion.button
                     type="button"
                     whileTap={{ scale: 0.95 }}
+                    disabled={!JOURNAL_EDITABLE}
                     onClick={() => updateEnglishDay(dayNumber, { done: !log.done })}
-                    className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${log.done ? 'bg-brand-500 text-ink-950' : 'border border-line text-muted hover:border-brand-500/50 hover:text-white'}`}
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-default ${log.done ? 'bg-brand-500 text-ink-950' : 'border border-line text-muted hover:border-brand-500/50 hover:text-white'}`}
                 >
                     <LuCheck size={16} strokeWidth={3} />
                     {log.done ? t('english.dayDone') : t('english.markDayDone')}
@@ -127,7 +132,7 @@ function DayLog({ dayNumber }) {
 
             <div className="mb-3 mt-6 flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-faint">{t('english.logTitle')}</h3>
-                {hiddenSkills.length > 0 && (
+                {JOURNAL_EDITABLE && hiddenSkills.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                         {hiddenSkills.map((skill) => (
                             <button
@@ -154,7 +159,7 @@ function DayLog({ dayNumber }) {
 
             <label className="mt-4 block">
                 <span className="mb-1.5 block text-sm text-muted">{t('english.generalNote')}</span>
-                <textarea rows={2} value={log.note} onChange={(event) => updateEnglishDay(dayNumber, { note: event.target.value })} placeholder={t('english.generalNotePlaceholder')} className="field" />
+                <textarea rows={2} value={log.note} readOnly={!JOURNAL_EDITABLE} onChange={(event) => updateEnglishDay(dayNumber, { note: event.target.value })} placeholder={JOURNAL_EDITABLE ? t('english.generalNotePlaceholder') : '—'} className="field" />
             </label>
         </motion.div>
     );
@@ -397,7 +402,7 @@ export default function EnglishPage() {
                 action={(
                     <label className="block">
                         <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-faint">{t('english.startDate')}</span>
-                        <input type="date" value={startDate ?? ''} onChange={(event) => setEnglishStart(event.target.value || null)} className="field w-auto" />
+                        <input type="date" value={startDate ?? ''} disabled={!JOURNAL_EDITABLE} onChange={(event) => setEnglishStart(event.target.value || null)} className="field w-auto disabled:opacity-60" />
                     </label>
                 )}
             />
@@ -409,9 +414,11 @@ export default function EnglishPage() {
             {!startDate && (
                 <div className="card mb-6 flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-muted">{t('english.notStarted')}</p>
-                    <button type="button" onClick={() => setEnglishStart(today)} className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-ink-950 transition hover:bg-brand-400">
-                        {t('english.setStart')}
-                    </button>
+                    {JOURNAL_EDITABLE && (
+                        <button type="button" onClick={() => setEnglishStart(today)} className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-ink-950 transition hover:bg-brand-400">
+                            {t('english.setStart')}
+                        </button>
+                    )}
                 </div>
             )}
             {finished && <p className="card mb-6 p-5 text-brand-300">{t('english.finished')}</p>}

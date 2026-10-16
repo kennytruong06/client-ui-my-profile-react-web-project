@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
 import { LuBrain, LuCheck, LuDices, LuLayers, LuNotebookPen, LuPuzzle, LuRotateCcw, LuRotateCw, LuShuffle, LuThumbsUp } from 'react-icons/lu';
 import WordDetails, { PosBadge, SpeakButton } from '@/components/english/WordDetails';
 import { useI18n } from '@/i18n/I18nProvider';
-import { addExample, recordReview, useJournal } from '@/store/journalStore';
+import { JOURNAL_EDITABLE, addExample, recordReview, useJournal } from '@/store/journalStore';
 import { splitList } from '@/data/english';
 import { shuffle } from '@/lib/speech';
 
@@ -312,7 +312,7 @@ function WriteReveal({ words, topics }) {
                                 <WordDetails word={word} topics={topics} showHeader={false} />
                             </div>
                             <div className="flex flex-wrap items-center justify-between gap-3">
-                                {attempt.trim() ? (
+                                {JOURNAL_EDITABLE && attempt.trim() ? (
                                     <button
                                         type="button"
                                         disabled={saved}

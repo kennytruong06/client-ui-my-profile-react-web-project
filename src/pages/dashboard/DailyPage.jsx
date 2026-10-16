@@ -276,10 +276,12 @@ export default function DailyPage() {
             )}
 
             <div className="space-y-4">
-                <section className="card p-5 sm:p-6">
-                    <h2 className="mb-4 font-display text-lg font-semibold">{t('daily.newEntry')}</h2>
-                    <EntryForm categories={categories} />
-                </section>
+                {DAILY_EDITABLE && (
+                    <section className="card p-5 sm:p-6">
+                        <h2 className="mb-4 font-display text-lg font-semibold">{t('daily.newEntry')}</h2>
+                        <EntryForm categories={categories} />
+                    </section>
+                )}
 
                 <section className="card p-5 sm:p-6">
                     <h2 className="mb-4 font-display text-lg font-semibold">{t('daily.manageCategories')}</h2>

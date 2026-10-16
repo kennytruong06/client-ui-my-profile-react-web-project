@@ -144,10 +144,10 @@ function withDay(date, update) {
 
 export function updateTask(date, taskId, patch) {
     withDay(date, (day) => {
-        const current = day.tasks[taskId] ?? { status: null, note: '', steps: [], variant: null };
+        const current = { status: null, note: '', steps: [], stepValues: {}, variant: null, minutes: null, ...day.tasks[taskId] };
         const next = { ...current, ...patch };
         const tasks = { ...day.tasks };
-        if (!next.status && !next.note && next.steps.length === 0 && !next.variant) {
+        if (!next.status && !next.note && next.steps.length === 0 && Object.keys(next.stepValues).length === 0 && !next.variant && next.minutes == null) {
             delete tasks[taskId];
         } else {
             tasks[taskId] = next;
@@ -254,6 +254,31 @@ export function resetJournal() {
     commit(emptyState());
 }
 
+function encodeSteps(task) {
+    const values = task.stepValues ?? {};
+    const ids = [...new Set([...(task.steps ?? []), ...Object.keys(values)])];
+    return ids.map((id) => {
+        const checked = (task.steps ?? []).includes(id) ? '' : '!';
+        return values[id] == null ? `${checked}${id}` : `${checked}${id}=${values[id]}`;
+    }).join('|');
+}
+
+function decodeSteps(text) {
+    const steps = [];
+    const stepValues = {};
+    (text ? text.split('|') : []).forEach((part) => {
+        const unchecked = part.startsWith('!');
+        const [id, value] = part.replace(/^!/, '').split('=');
+        if (!unchecked) {
+            steps.push(id);
+        }
+        if (value !== undefined && value !== '') {
+            stepValues[id] = Number(value);
+        }
+    });
+    return { steps, stepValues };
+}
+
 export function journalToRows(journal) {
     const rows = [
         { type: 'setting', key: 'trackingStart', text: journal.trackingStart },
@@ -271,8 +296,9 @@ export function journalToRows(journal) {
                 key: taskId,
                 status: task.status ?? '',
                 variant: task.variant ?? '',
-                steps: (task.steps ?? []).join('|'),
+                steps: encodeSteps(task),
                 text: task.note ?? '',
+                minutes: task.minutes ?? '',
             });
         });
     });
@@ -312,8 +338,9 @@ function rowsToJournal(rows) {
             day.tasks[row.key] = {
                 status: row.status || null,
                 note: row.text,
-                steps: row.steps ? row.steps.split('|') : [],
+                ...decodeSteps(row.steps),
                 variant: row.variant || null,
+                minutes: row.minutes === undefined || row.minutes === '' ? null : Number(row.minutes),
             };
             journal.days[row.date] = day;
         } else if (row.type === 'english-day') {

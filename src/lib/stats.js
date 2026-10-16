@@ -1,4 +1,4 @@
-import { CATEGORIES, tasksForWeekday } from '@/data/schedule';
+import { CATEGORIES, isTimed, tasksForWeekday } from '@/data/schedule';
 import { addDays, rangeKeys, weekdayOf } from '@/lib/date';
 
 export function dayStatus(journal, key) {
@@ -33,7 +33,7 @@ export function dayRatio(journal, key, today) {
 }
 
 function emptyBucket() {
-    return { planned: 0, done: 0, minutes: 0 };
+    return { planned: 0, done: 0, minutes: 0, targetMinutes: 0, timedDone: 0 };
 }
 
 export function streaks(journal, today) {
@@ -60,7 +60,7 @@ export function computeStats(journal, rangeStart, today) {
     const start = rangeStart > journal.trackingStart ? rangeStart : journal.trackingStart;
     const keys = start <= today ? rangeKeys(start, today) : [];
 
-    const totals = { mandatoryPlanned: 0, mandatoryDone: 0, mandatorySkipped: 0, mandatoryMissed: 0, optionalPlanned: 0, optionalDone: 0 };
+    const totals = { mandatoryPlanned: 0, mandatoryDone: 0, mandatorySkipped: 0, mandatoryMissed: 0, optionalPlanned: 0, optionalDone: 0, targetMinutes: 0, actualMinutes: 0 };
     const byCategory = Object.fromEntries(CATEGORIES.map((category) => [category, emptyBucket()]));
     const byWeekday = Array.from({ length: 7 }, emptyBucket);
     const skips = [];
@@ -81,11 +81,24 @@ export function computeStats(journal, rangeStart, today) {
                 skips.push({ date: key, task, note: record.note });
             }
 
+            const bucket = byCategory[task.category];
+            const actualMinutes = record?.minutes ?? task.minutes;
+            if (status === 'done' && isTimed(task)) {
+                bucket.minutes += actualMinutes;
+            }
+            if (isTimed(task) && (task.mandatory || status === 'done')) {
+                bucket.targetMinutes += task.minutes;
+                totals.targetMinutes += task.minutes;
+                if (status === 'done') {
+                    bucket.timedDone += 1;
+                    totals.actualMinutes += actualMinutes;
+                }
+            }
+
             if (!task.mandatory) {
                 totals.optionalPlanned += 1;
                 if (status === 'done') {
                     totals.optionalDone += 1;
-                    byCategory[task.category].minutes += task.minutes;
                 }
                 return;
             }
@@ -97,7 +110,6 @@ export function computeStats(journal, rangeStart, today) {
             if (status === 'done') {
                 totals.mandatoryDone += 1;
                 byCategory[task.category].done += 1;
-                byCategory[task.category].minutes += task.minutes;
                 byWeekday[weekday].done += 1;
             } else if (status === 'skipped') {
                 totals.mandatorySkipped += 1;
@@ -120,4 +132,14 @@ export function verdictKey(discipline) {
         return 'great';
     }
     return discipline >= 0.6 ? 'good' : 'weak';
+}
+
+export function ratioTone(ratio) {
+    if (ratio >= 1) {
+        return { text: 'text-brand-300', bar: 'bg-brand-500' };
+    }
+    if (ratio >= 0.7) {
+        return { text: 'text-amber-300', bar: 'bg-amber-400' };
+    }
+    return { text: 'text-danger', bar: 'bg-danger' };
 }

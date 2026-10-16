@@ -14,6 +14,7 @@ const skincareNight = (start) => ({
     mandatory: true,
     start,
     minutes: 20,
+    timed: false,
     title: { en: 'Night skin care', vi: 'Skin care buổi tối' },
     steps: SKINCARE_STEPS,
 });
@@ -24,14 +25,15 @@ const WORKDAY_FULL = [
         category: 'exercise',
         mandatory: true,
         start: '06:00',
-        minutes: 30,
+        minutes: 25,
+        timed: false,
         title: { en: 'Morning workout', vi: 'Tập thể dục buổi sáng' },
         steps: [
-            { id: 'pushups', label: { en: '50 push-ups', vi: 'Hít đất 50 cái' } },
-            { id: 'squats', label: { en: '50 squats', vi: 'Squat 50 cái' } },
-            { id: 'crunches', label: { en: '100 crunches', vi: 'Gập bụng 100 cái' } },
-            { id: 'shadow', label: { en: '10 min shadow boxing', vi: 'Đấm gió boxing 10 phút' } },
-            { id: 'footwork', label: { en: '5 min boxing with footwork', vi: 'Vừa đấm gió vừa di chuyển 5 phút' } },
+            { id: 'pushups', label: { en: 'Push-ups', vi: 'Hít đất' }, target: 50, unit: 'reps' },
+            { id: 'squats', label: { en: 'Squats', vi: 'Squat' }, target: 50, unit: 'reps' },
+            { id: 'crunches', label: { en: 'Crunches', vi: 'Gập bụng' }, target: 100, unit: 'reps' },
+            { id: 'shadow', label: { en: 'Shadow boxing', vi: 'Đấm gió boxing' }, target: 5, unit: 'min' },
+            { id: 'footwork', label: { en: 'Boxing with footwork', vi: 'Vừa đấm gió vừa di chuyển' }, target: 5, unit: 'min' },
         ],
     },
     {
@@ -266,6 +268,10 @@ export const WEEK_TEMPLATE = {
 };
 
 export const WORK_HOURS = { start: '09:00', end: '17:30', days: [1, 2, 3, 4, 5] };
+
+export function isTimed(task) {
+    return task.timed !== false;
+}
 
 export function tasksForWeekday(weekday) {
     return WEEK_TEMPLATE[weekday] ?? [];

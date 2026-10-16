@@ -4,7 +4,7 @@ import { LuDownload, LuTrash2, LuUpload } from 'react-icons/lu';
 import PageHeader from '@/components/PageHeader';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useI18n } from '@/i18n/I18nProvider';
-import { importRows, journalToRows, resetJournal, setTrackingStart, useJournal } from '@/store/journalStore';
+import { JOURNAL_EDITABLE, importRows, journalToRows, resetJournal, setTrackingStart, useJournal } from '@/store/journalStore';
 import { downloadText, fromCsv, toCsv } from '@/lib/csv';
 import { todayKey } from '@/lib/date';
 
@@ -69,8 +69,9 @@ export default function SettingsPage() {
                         type="date"
                         value={journal.trackingStart}
                         max={todayKey()}
+                        disabled={!JOURNAL_EDITABLE}
                         onChange={(event) => event.target.value && setTrackingStart(event.target.value)}
-                        className="field w-auto"
+                        className="field w-auto disabled:opacity-60"
                     />
                 </Row>
 
@@ -79,11 +80,11 @@ export default function SettingsPage() {
                         <LuDownload size={16} />
                         {t('settings.exportCsv')}
                     </button>
-                    <button type="button" onClick={() => fileRef.current?.click()} className="flex items-center gap-2 rounded-xl border border-line px-4 py-2 text-sm text-muted transition hover:border-line-strong hover:text-white">
+                    {JOURNAL_EDITABLE && <button type="button" onClick={() => fileRef.current?.click()} className="flex items-center gap-2 rounded-xl border border-line px-4 py-2 text-sm text-muted transition hover:border-line-strong hover:text-white">
                         <LuUpload size={16} />
                         {t('settings.importCsv')}
-                    </button>
-                    <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleImport} className="hidden" />
+                    </button>}
+                    {JOURNAL_EDITABLE && <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={handleImport} className="hidden" />}
                 </Row>
 
                 {message && (
@@ -92,12 +93,12 @@ export default function SettingsPage() {
                     </motion.p>
                 )}
 
-                <Row title={t('settings.reset')} delay={0.15}>
+                {JOURNAL_EDITABLE && <Row title={t('settings.reset')} delay={0.15}>
                     <button type="button" onClick={reset} className="flex items-center gap-2 rounded-xl border border-danger/40 px-4 py-2 text-sm text-danger transition hover:bg-danger/10">
                         <LuTrash2 size={16} />
                         {t('settings.reset')}
                     </button>
-                </Row>
+                </Row>}
             </div>
         </div>
     );

@@ -1,7 +1,7 @@
 import { LuInfo, LuNotebookPen } from 'react-icons/lu';
 import TaskCard from '@/components/dashboard/TaskCard';
 import { useI18n } from '@/i18n/I18nProvider';
-import { setDayNote, useJournal } from '@/store/journalStore';
+import { JOURNAL_EDITABLE, setDayNote, useJournal } from '@/store/journalStore';
 import { tasksForWeekday } from '@/data/schedule';
 import { roadmapDayFor } from '@/data/ieltsRoadmap';
 import { todayKey, weekdayOf } from '@/lib/date';
@@ -27,7 +27,7 @@ export default function DayPlan({ date }) {
     const isFuture = date > todayKey();
     const roadmapDay = roadmapDayFor(journal.english.startDate, date);
 
-    const recordOf = (taskId) => ({ status: null, note: '', steps: [], variant: null, ...day.tasks[taskId] });
+    const recordOf = (taskId) => ({ status: null, note: '', steps: [], stepValues: {}, variant: null, minutes: null, ...day.tasks[taskId] });
     const countDone = (list) => `${list.filter((task) => day.tasks[task.id]?.status === 'done').length}/${list.length}`;
 
     const mandatory = tasks.filter((task) => task.mandatory);
@@ -64,13 +64,17 @@ export default function DayPlan({ date }) {
                     <LuNotebookPen className="text-brand-400" />
                     {t('day.dayNoteTitle')}
                 </h2>
-                <textarea
-                    rows={4}
-                    value={day.note}
-                    onChange={(event) => setDayNote(date, event.target.value)}
-                    placeholder={t('day.dayNotePlaceholder')}
-                    className="field"
-                />
+                {JOURNAL_EDITABLE ? (
+                    <textarea
+                        rows={4}
+                        value={day.note}
+                        onChange={(event) => setDayNote(date, event.target.value)}
+                        placeholder={t('day.dayNotePlaceholder')}
+                        className="field"
+                    />
+                ) : (
+                    <p className="whitespace-pre-line text-sm text-muted">{day.note || '—'}</p>
+                )}
             </section>
         </div>
     );
