@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { LuArrowRight, LuCheck, LuClock, LuMinus, LuPlus, LuRotateCcw, LuTimer, LuX } from 'react-icons/lu';
+import { LuArrowRight, LuCheck, LuClock, LuListChecks, LuMinus, LuPlus, LuRotateCcw, LuShuffle, LuTimer, LuX } from 'react-icons/lu';
 import CategoryIcon from '@/components/CategoryIcon';
 import { useI18n } from '@/i18n/I18nProvider';
 import { JOURNAL_EDITABLE, updateTask } from '@/store/journalStore';
@@ -8,17 +8,21 @@ import { isTimed } from '@/data/schedule';
 import { endTime, formatDuration } from '@/lib/date';
 import { ratioTone } from '@/lib/stats';
 
-const EMPTY_RECORD = { status: null, note: '', steps: [], stepValues: {}, variant: null, minutes: null };
+const EMPTY_RECORD = { status: null, note: '', steps: [], stepValues: {}, variant: null, minutes: null, activity: '' };
+const ALTERNATIVE = 'alternative';
 const STEP_MINUTES = 15;
 const MAX_MINUTES = 600;
 
-function StatusBadge({ status }) {
+function StatusBadge({ status, progress }) {
     const { t } = useI18n();
     if (status === 'done') {
         return <span className="rounded-full bg-brand-500/15 px-2.5 py-0.5 text-xs font-semibold text-brand-300">{t('common.done')}</span>;
     }
     if (status === 'skipped') {
         return <span className="rounded-full bg-danger/10 px-2.5 py-0.5 text-xs font-semibold text-danger">{t('common.skipped')}</span>;
+    }
+    if (progress?.done) {
+        return <span className="rounded-full bg-amber-400/10 px-2.5 py-0.5 text-xs font-semibold text-amber-300">{t('day.inProgress', progress)}</span>;
     }
     return null;
 }
@@ -119,7 +123,7 @@ function StepRow({ step, checked, value, locked, onToggle, onValue }) {
                     ) : (
                         <span className={`w-16 text-right ${checked ? tone.text : 'text-faint'}`}>{checked ? (value ?? step.target) : '—'}</span>
                     )}
-                    <span className="w-16 text-faint">/ {step.target} {t(`day.units.${step.unit}`)}</span>
+                    <span className="w-20 whitespace-nowrap text-faint">/ {step.target} {t(`day.units.${step.unit}`)}</span>
                     {ratio != null && <span className={`w-11 text-right ${tone.text}`}>{Math.round(ratio * 100)}%</span>}
                 </span>
             )}
@@ -131,10 +135,11 @@ function StepList({ date, task, record, locked }) {
     const { t } = useI18n();
     const values = record.stepValues ?? {};
     const measured = task.steps.some((step) => step.target != null);
+    const checkedCount = task.steps.filter((step) => record.steps.includes(step.id)).length;
 
     const save = (steps, stepValues) => {
         const allChecked = task.steps.every((step) => steps.includes(step.id));
-        updateTask(date, task.id, { steps, stepValues, status: allChecked ? 'done' : record.status === 'done' ? null : record.status });
+        updateTask(date, task.id, { steps, stepValues, status: allChecked ? 'done' : record.status });
     };
 
     const toggle = (step) => {
@@ -156,7 +161,14 @@ function StepList({ date, task, record, locked }) {
 
     return (
         <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-faint">{t('day.steps')}</p>
+            <div className="mb-2 flex items-center gap-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-faint">
+                    {t('day.steps')} · <span className="font-mono">{checkedCount}/{task.steps.length}</span>
+                </p>
+                <div className="h-1 max-w-40 flex-1 overflow-hidden rounded-full bg-ink-800">
+                    <motion.div className="h-full rounded-full bg-brand-500" animate={{ width: `${(checkedCount / task.steps.length) * 100}%` }} transition={{ duration: 0.3 }} />
+                </div>
+            </div>
             <div className={`grid gap-1.5 ${measured ? '' : 'sm:grid-cols-2'}`}>
                 {task.steps.map((step) => (
                     <StepRow
@@ -253,15 +265,87 @@ function OutcomeEditor({ date, task, record, locked }) {
     );
 }
 
+function ModeSwitch({ date, task, alternative, locked }) {
+    const { t } = useI18n();
+    const choose = (nextAlternative) => {
+        if (nextAlternative === alternative) {
+            return;
+        }
+        updateTask(date, task.id, nextAlternative
+            ? { variant: ALTERNATIVE, steps: [], stepValues: {}, status: null, minutes: null }
+            : { variant: null, activity: '', status: null, minutes: null });
+    };
+    const options = [
+        { id: false, icon: LuListChecks, label: t('day.modeSteps') },
+        { id: true, icon: LuShuffle, label: t('day.modeAlternative') },
+    ];
+
+    return (
+        <div className="mt-4 flex w-full gap-1 rounded-xl border border-line bg-ink-900 p-1 sm:w-max">
+            {options.map(({ id, icon: Icon, label }) => (
+                <button
+                    key={label}
+                    type="button"
+                    disabled={locked}
+                    onClick={() => choose(id)}
+                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition disabled:cursor-default sm:flex-none ${alternative === id ? 'bg-brand-500 font-semibold text-ink-950' : 'text-muted enabled:hover:text-white'}`}
+                >
+                    <Icon size={14} />
+                    {label}
+                </button>
+            ))}
+        </div>
+    );
+}
+
+function AlternativeEditor({ date, task, record, locked }) {
+    const { t } = useI18n();
+
+    return (
+        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-faint">{t('day.activityLabel')}</p>
+            {locked ? (
+                <p className="whitespace-pre-line rounded-xl border border-line bg-ink-900/60 px-3.5 py-2.5 text-sm text-white">{record.activity || '—'}</p>
+            ) : (
+                <>
+                    <div className="mb-2 flex flex-wrap gap-1.5">
+                        {t('day.quickActivities').map((activity) => (
+                            <button
+                                key={activity}
+                                type="button"
+                                onClick={() => updateTask(date, task.id, { activity: record.activity ? `${record.activity}, ${activity}` : activity })}
+                                className="rounded-full border border-line px-2.5 py-1 text-xs text-muted transition hover:border-brand-500/50 hover:text-white"
+                            >
+                                {activity}
+                            </button>
+                        ))}
+                    </div>
+                    <textarea
+                        rows={2}
+                        value={record.activity}
+                        onChange={(event) => updateTask(date, task.id, { activity: event.target.value })}
+                        placeholder={t('day.activityPlaceholder')}
+                        className="field"
+                    />
+                    {!record.status && !record.activity.trim() && <p className="mt-1.5 text-xs text-faint">{t('day.activityRequired')}</p>}
+                </>
+            )}
+        </motion.div>
+    );
+}
+
 export default function TaskCard({ date, task, record = EMPTY_RECORD, disabled = false, roadmapDay = null, index = 0 }) {
     const { t, tx } = useI18n();
     const status = record.status;
     const locked = disabled || !JOURNAL_EDITABLE;
-    const timed = isTimed(task);
+    const alternative = Boolean(task.allowAlternative) && record.variant === ALTERNATIVE;
+    const timed = isTimed(task) || alternative;
+    const canMarkDone = !alternative || Boolean(record.activity?.trim());
+    const stepProgress = task.steps && !alternative ? { done: task.steps.filter((step) => record.steps.includes(step.id)).length, total: task.steps.length } : null;
 
     const markDone = () => {
         const patch = { status: 'done', minutes: timed ? (record.minutes ?? task.minutes) : null };
-        if (task.steps) {
+        if (task.steps && !alternative && record.steps.length === 0) {
             patch.steps = task.steps.map((step) => step.id);
             patch.stepValues = Object.fromEntries(task.steps.filter((step) => step.target != null).map((step) => [step.id, record.stepValues?.[step.id] ?? step.target]));
         }
@@ -312,7 +396,7 @@ export default function TaskCard({ date, task, record = EMPTY_RECORD, disabled =
                         </span>
                         {timed && <span>{t('day.target')}: {formatDuration(task.minutes)}</span>}
                         <span className="uppercase tracking-wider">{t(`categories.${task.category}`)}</span>
-                        <StatusBadge status={status} />
+                        <StatusBadge status={status} progress={stepProgress} />
                     </div>
                     <h3 className={`mt-1 font-display text-base font-semibold sm:text-lg ${status === 'skipped' ? 'text-muted line-through decoration-danger/60' : 'text-white'}`}>
                         {tx(task.title)}
@@ -328,7 +412,9 @@ export default function TaskCard({ date, task, record = EMPTY_RECORD, disabled =
             </div>
 
             {task.variants && <VariantPicker date={date} task={task} record={record} locked={locked} />}
-            {task.steps && <StepList date={date} task={task} record={record} locked={locked} />}
+            {task.allowAlternative && (!locked || alternative) && <ModeSwitch date={date} task={task} alternative={alternative} locked={locked} />}
+            {alternative && <AlternativeEditor date={date} task={task} record={record} locked={locked} />}
+            {task.steps && !alternative && <StepList date={date} task={task} record={record} locked={locked} />}
 
             <AnimatePresence initial={false}>
                 {status === 'done' && timed && <ActualTime key="time" date={date} task={task} record={record} locked={locked} />}
@@ -351,7 +437,8 @@ export default function TaskCard({ date, task, record = EMPTY_RECORD, disabled =
                                 type="button"
                                 whileTap={{ scale: 0.94 }}
                                 onClick={markDone}
-                                className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-1.5 text-sm font-semibold text-ink-950 transition hover:bg-brand-400"
+                                disabled={!canMarkDone}
+                                className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-1.5 text-sm font-semibold text-ink-950 transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 <LuCheck size={16} strokeWidth={3} />
                                 {t('day.markDone')}

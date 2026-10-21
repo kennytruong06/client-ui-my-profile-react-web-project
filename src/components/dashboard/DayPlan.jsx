@@ -27,7 +27,7 @@ export default function DayPlan({ date }) {
     const isFuture = date > todayKey();
     const roadmapDay = roadmapDayFor(journal.english.startDate, date);
 
-    const recordOf = (taskId) => ({ status: null, note: '', steps: [], stepValues: {}, variant: null, minutes: null, ...day.tasks[taskId] });
+    const recordOf = (taskId) => ({ status: null, note: '', steps: [], stepValues: {}, variant: null, minutes: null, activity: '', ...day.tasks[taskId] });
     const countDone = (list) => `${list.filter((task) => day.tasks[task.id]?.status === 'done').length}/${list.length}`;
 
     const mandatory = tasks.filter((task) => task.mandatory);

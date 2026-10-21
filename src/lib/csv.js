@@ -1,4 +1,4 @@
-export const CSV_COLUMNS = ['type', 'date', 'key', 'status', 'variant', 'steps', 'text', 'minutes'];
+export const CSV_COLUMNS = ['type', 'date', 'key', 'status', 'variant', 'steps', 'text', 'minutes', 'activity'];
 
 function escapeCell(value) {
     const text = value == null ? '' : String(value);

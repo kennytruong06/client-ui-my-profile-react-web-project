@@ -144,10 +144,10 @@ function withDay(date, update) {
 
 export function updateTask(date, taskId, patch) {
     withDay(date, (day) => {
-        const current = { status: null, note: '', steps: [], stepValues: {}, variant: null, minutes: null, ...day.tasks[taskId] };
+        const current = { status: null, note: '', steps: [], stepValues: {}, variant: null, minutes: null, activity: '', ...day.tasks[taskId] };
         const next = { ...current, ...patch };
         const tasks = { ...day.tasks };
-        if (!next.status && !next.note && next.steps.length === 0 && Object.keys(next.stepValues).length === 0 && !next.variant && next.minutes == null) {
+        if (!next.status && !next.note && next.steps.length === 0 && Object.keys(next.stepValues).length === 0 && !next.variant && next.minutes == null && !next.activity) {
             delete tasks[taskId];
         } else {
             tasks[taskId] = next;
@@ -299,6 +299,7 @@ export function journalToRows(journal) {
                 steps: encodeSteps(task),
                 text: task.note ?? '',
                 minutes: task.minutes ?? '',
+                activity: task.activity ?? '',
             });
         });
     });
@@ -341,6 +342,7 @@ function rowsToJournal(rows) {
                 ...decodeSteps(row.steps),
                 variant: row.variant || null,
                 minutes: row.minutes === undefined || row.minutes === '' ? null : Number(row.minutes),
+                activity: row.activity ?? '',
             };
             journal.days[row.date] = day;
         } else if (row.type === 'english-day') {

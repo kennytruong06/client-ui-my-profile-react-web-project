@@ -27,6 +27,7 @@ const WORKDAY_FULL = [
         start: '06:00',
         minutes: 25,
         timed: false,
+        allowAlternative: true,
         title: { en: 'Morning workout', vi: 'Tập thể dục buổi sáng' },
         steps: [
             { id: 'pushups', label: { en: 'Push-ups', vi: 'Hít đất' }, target: 50, unit: 'reps' },

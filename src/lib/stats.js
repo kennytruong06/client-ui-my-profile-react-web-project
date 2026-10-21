@@ -83,10 +83,12 @@ export function computeStats(journal, rangeStart, today) {
 
             const bucket = byCategory[task.category];
             const actualMinutes = record?.minutes ?? task.minutes;
-            if (status === 'done' && isTimed(task)) {
+            const alternative = Boolean(task.allowAlternative) && record?.variant === 'alternative' && status === 'done';
+            const timed = isTimed(task) || alternative;
+            if (status === 'done' && timed) {
                 bucket.minutes += actualMinutes;
             }
-            if (isTimed(task) && (task.mandatory || status === 'done')) {
+            if (timed && (task.mandatory || status === 'done')) {
                 bucket.targetMinutes += task.minutes;
                 totals.targetMinutes += task.minutes;
                 if (status === 'done') {
