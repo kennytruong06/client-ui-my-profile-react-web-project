@@ -148,12 +148,12 @@ export default {
         },
         eating: {
             title: 'Chuỗi ăn healthy',
-            rule: 'Ăn trong mục tiêu calo, nhưng không thấp hơn 85% BMR.',
+            rule: 'Ăn ít hơn lượng calo tiêu thụ mỗi ngày, nhưng không thấp hơn 85% BMR.',
             noProfile: 'Nhập chỉ số cơ thể ở tab Ăn uống để bắt đầu.',
             noLog: 'Ghi lại các bữa ăn hôm nay để giữ lửa.',
-            over: 'Đã vượt mức {target} kcal hôm nay. Lửa sẽ tắt.',
+            over: 'Đã ăn nhiều hơn mức tiêu thụ {burned} kcal hôm nay. Lửa sẽ tắt.',
             low: 'Hãy ghi tiếp. Ăn ít nhất {floor} kcal để không ăn quá ít.',
-            ok: 'Đang đúng mục tiêu: {eaten}/{target} kcal.',
+            ok: 'Đang thâm hụt calo: {eaten}/{burned} kcal tiêu thụ.',
         },
     },
     schedule: {

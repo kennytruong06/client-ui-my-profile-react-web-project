@@ -114,13 +114,13 @@ export default function HabitStreaks({ journal, today }) {
 
     const skincareMessage = skincare.state === 'kept' ? { good: true, text: t('habit.skincare.kept') } : { good: false, text: t('habit.skincare.need') };
 
-    let eatingMessage = { good: true, text: t('habit.eating.ok', { eaten: Math.round(eating.eaten), target: plan?.target }) };
+    let eatingMessage = { good: true, text: t('habit.eating.ok', { eaten: Math.round(eating.eaten), burned: eating.burned }) };
     if (!plan) {
         eatingMessage = { good: false, text: t('habit.eating.noProfile') };
     } else if (!eating.logged) {
         eatingMessage = { good: false, text: t('habit.eating.noLog') };
-    } else if (eating.eaten > plan.target) {
-        eatingMessage = { good: false, text: t('habit.eating.over', { target: plan.target }) };
+    } else if (eating.eaten > eating.burned) {
+        eatingMessage = { good: false, text: t('habit.eating.over', { burned: eating.burned }) };
     } else if (eating.eaten < plan.bmr * EATING_FLOOR) {
         eatingMessage = { good: false, text: t('habit.eating.low', { floor: Math.round(plan.bmr * EATING_FLOOR) }) };
     }

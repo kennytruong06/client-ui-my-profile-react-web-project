@@ -143,7 +143,8 @@ export function eatingStateFn(nutrition, plan) {
         const entry = nutrition.days[key];
         const logged = (entry?.meals?.length ?? 0) > 0;
         const eaten = dayTotals(entry).kcal;
-        const healthy = logged && eaten <= plan.target && eaten >= plan.bmr * EATING_FLOOR;
-        return { state: healthy ? 'kept' : 'broken', eaten, logged };
+        const burned = plan.tdee + (entry?.burn ?? 0);
+        const healthy = logged && eaten <= burned && eaten >= plan.bmr * EATING_FLOOR;
+        return { state: healthy ? 'kept' : 'broken', eaten, burned, logged };
     };
 }

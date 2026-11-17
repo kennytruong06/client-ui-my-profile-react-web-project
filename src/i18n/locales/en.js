@@ -148,12 +148,12 @@ export default {
         },
         eating: {
             title: 'Healthy eating streak',
-            rule: 'Eat within your calorie target, but not below 85% of your BMR.',
+            rule: 'Eat less than you burn each day, but not below 85% of your BMR.',
             noProfile: 'Enter your body stats in the Nutrition tab to start.',
             noLog: "Log today's meals to keep the flame.",
-            over: "Over today's {target} kcal limit. The flame will go out.",
+            over: "You ate more than the {burned} kcal you burn today. The flame will go out.",
             low: 'Keep logging. Eat at least {floor} kcal so you are not under-eating.',
-            ok: 'On target so far: {eaten}/{target} kcal.',
+            ok: 'In a deficit so far: {eaten}/{burned} kcal burned.',
         },
     },
     schedule: {
