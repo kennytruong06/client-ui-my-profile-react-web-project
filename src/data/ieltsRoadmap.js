@@ -1,5 +1,3 @@
-import { diffDays } from '@/lib/date';
-
 export const ROADMAP_LENGTH = 60;
 
 export const RESOURCES = [
@@ -269,12 +267,4 @@ export const ROADMAP_DAYS = WEEKS.flatMap((week, weekIndex) => {
 
 export function roadmapDay(dayNumber) {
     return ROADMAP_DAYS.find((item) => item.day === dayNumber) ?? null;
-}
-
-export function roadmapDayFor(startDate, date) {
-    if (!startDate) {
-        return null;
-    }
-    const day = diffDays(startDate, date) + 1;
-    return day >= 1 && day <= ROADMAP_LENGTH ? day : null;
 }

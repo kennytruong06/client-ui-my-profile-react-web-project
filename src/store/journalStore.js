@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { todayKey } from '@/lib/date';
 import { DEFAULT_TOPICS, ENGLISH_SKILLS } from '@/data/english';
 import { fromCsv, toCsv } from '@/lib/csv';
+import { emptyProfile } from '@/lib/nutrition';
 import journalCsv from '@/data/journal/journal.csv?raw';
 
 const LEGACY_STORAGE_KEY = 'kp.journal.v1';
@@ -15,9 +16,14 @@ function emptyState() {
     return {
         trackingStart: todayKey(),
         days: {},
-        english: { startDate: null, days: {} },
+        english: { days: {} },
         vocab: { words: [], topics: DEFAULT_TOPICS },
+        nutrition: emptyNutrition(),
     };
+}
+
+export function emptyNutrition() {
+    return { profile: null, weights: {}, days: {} };
 }
 
 function normalize(parsed) {
@@ -27,6 +33,7 @@ function normalize(parsed) {
         ...parsed,
         english: { ...defaults.english, ...parsed.english },
         vocab: { ...defaults.vocab, ...parsed.vocab },
+        nutrition: { ...defaults.nutrition, ...parsed.nutrition },
     };
 }
 
@@ -164,12 +171,8 @@ export function setTrackingStart(date) {
     commit({ ...state, trackingStart: date });
 }
 
-export function setEnglishStart(date) {
-    commit({ ...state, english: { ...state.english, startDate: date } });
-}
-
 export function emptyEnglishLog() {
-    return { done: false, note: '', hidden: [], skills: {} };
+    return { done: false, date: '', note: '', hidden: [], skills: {} };
 }
 
 export function englishLogOf(journal, dayNumber) {
@@ -183,6 +186,12 @@ function withEnglishDay(dayNumber, update) {
 
 export function updateEnglishDay(dayNumber, patch) {
     withEnglishDay(dayNumber, (log) => ({ ...log, ...patch }));
+}
+
+export function assignEnglishDay(dayNumber, date) {
+    const days = Object.fromEntries(Object.entries(state.english.days).map(([key, log]) => [key, date && log.date === date ? { ...log, date: '' } : log]));
+    days[dayNumber] = { ...englishLogOf({ english: { days } }, dayNumber), date };
+    commit({ ...state, english: { ...state.english, days } });
 }
 
 export function updateEnglishSkill(dayNumber, skill, patch) {
@@ -250,6 +259,49 @@ export function saveTopics(topics) {
     });
 }
 
+export function saveProfile(patch) {
+    const profile = { ...emptyProfile(), ...state.nutrition.profile, ...patch };
+    commit({ ...state, nutrition: { ...state.nutrition, profile } });
+}
+
+export function setWeight(date, kg) {
+    const weights = { ...state.nutrition.weights };
+    if (kg == null || kg === '' || Number(kg) <= 0) {
+        delete weights[date];
+    } else {
+        weights[date] = Number(kg);
+    }
+    commit({ ...state, nutrition: { ...state.nutrition, weights } });
+}
+
+function withNutritionDay(date, update) {
+    const day = state.nutrition.days[date] ?? { meals: [], burn: 0, note: '' };
+    const nextDay = update(day);
+    const days = { ...state.nutrition.days };
+    if (nextDay.meals.length === 0 && !nextDay.burn && !nextDay.note) {
+        delete days[date];
+    } else {
+        days[date] = nextDay;
+    }
+    commit({ ...state, nutrition: { ...state.nutrition, days } });
+}
+
+export function addMeal(date, meal) {
+    withNutritionDay(date, (day) => ({ ...day, meals: [...day.meals, { qty: 1, ...meal, id: newId() }] }));
+}
+
+export function updateMeal(date, id, patch) {
+    withNutritionDay(date, (day) => ({ ...day, meals: day.meals.map((meal) => (meal.id === id ? { ...meal, ...patch } : meal)) }));
+}
+
+export function removeMeal(date, id) {
+    withNutritionDay(date, (day) => ({ ...day, meals: day.meals.filter((meal) => meal.id !== id) }));
+}
+
+export function setNutritionDay(date, patch) {
+    withNutritionDay(date, (day) => ({ ...day, ...patch }));
+}
+
 export function resetJournal() {
     commit(emptyState());
 }
@@ -282,7 +334,6 @@ function decodeSteps(text) {
 export function journalToRows(journal) {
     const rows = [
         { type: 'setting', key: 'trackingStart', text: journal.trackingStart },
-        { type: 'setting', key: 'englishStart', text: journal.english.startDate ?? '' },
     ];
 
     Object.entries(journal.days).sort(([a], [b]) => a.localeCompare(b)).forEach(([date, day]) => {
@@ -306,7 +357,7 @@ export function journalToRows(journal) {
 
     Object.keys(journal.english.days).forEach((dayNumber) => {
         const log = englishLogOf(journal, dayNumber);
-        rows.push({ type: 'english-day', key: dayNumber, status: log.done ? 'done' : '', text: log.note });
+        rows.push({ type: 'english-day', date: log.date, key: dayNumber, status: log.done ? 'done' : '', text: log.note });
         ENGLISH_SKILLS.forEach((skill) => {
             const entry = log.skills[skill];
             const hidden = log.hidden.includes(skill);
@@ -314,6 +365,19 @@ export function journalToRows(journal) {
                 rows.push({ type: 'english-skill', key: `${dayNumber}.${skill}`, status: hidden ? 'hidden' : '', variant: entry?.score ?? '', text: entry?.note ?? '' });
             }
         });
+    });
+
+    if (journal.nutrition.profile) {
+        rows.push({ type: 'body-profile', text: JSON.stringify(journal.nutrition.profile) });
+    }
+    Object.entries(journal.nutrition.weights).sort(([a], [b]) => a.localeCompare(b)).forEach(([date, kg]) => {
+        rows.push({ type: 'body-weight', date, text: kg });
+    });
+    Object.entries(journal.nutrition.days).sort(([a], [b]) => a.localeCompare(b)).forEach(([date, day]) => {
+        if (day.burn || day.note) {
+            rows.push({ type: 'nutrition-day', date, minutes: day.burn || '', text: day.note });
+        }
+        day.meals.forEach((meal) => rows.push({ type: 'meal', date, key: meal.id, text: JSON.stringify(meal) }));
     });
 
     journal.vocab.topics.forEach((topic) => rows.push({ type: 'vocab-topic', key: topic.id, text: topic.name }));
@@ -330,8 +394,6 @@ function rowsToJournal(rows) {
     rows.forEach((row) => {
         if (row.type === 'setting' && row.key === 'trackingStart' && row.text) {
             journal.trackingStart = row.text;
-        } else if (row.type === 'setting' && row.key === 'englishStart') {
-            journal.english.startDate = row.text || null;
         } else if (row.type === 'day-note') {
             journal.days[row.date] = { tasks: {}, ...journal.days[row.date], note: row.text };
         } else if (row.type === 'task') {
@@ -346,7 +408,7 @@ function rowsToJournal(rows) {
             };
             journal.days[row.date] = day;
         } else if (row.type === 'english-day') {
-            journal.english.days[row.key] = { ...emptyEnglishLog(), ...journal.english.days[row.key], done: row.status === 'done', note: row.text };
+            journal.english.days[row.key] = { ...emptyEnglishLog(), ...journal.english.days[row.key], done: row.status === 'done', date: row.date ?? '', note: row.text };
         } else if (row.type === 'english-skill') {
             const [dayNumber, skill] = row.key.split('.');
             const log = { ...emptyEnglishLog(), ...journal.english.days[dayNumber] };
@@ -356,6 +418,16 @@ function rowsToJournal(rows) {
                 log.skills = { ...log.skills, [skill]: { note: row.text, score: row.variant } };
             }
             journal.english.days[dayNumber] = log;
+        } else if (row.type === 'body-profile') {
+            journal.nutrition.profile = { ...emptyProfile(), ...JSON.parse(row.text) };
+        } else if (row.type === 'body-weight') {
+            journal.nutrition.weights[row.date] = Number(row.text);
+        } else if (row.type === 'nutrition-day') {
+            const day = journal.nutrition.days[row.date] ?? { meals: [], burn: 0, note: '' };
+            journal.nutrition.days[row.date] = { ...day, burn: Number(row.minutes) || 0, note: row.text ?? '' };
+        } else if (row.type === 'meal') {
+            const day = journal.nutrition.days[row.date] ?? { meals: [], burn: 0, note: '' };
+            journal.nutrition.days[row.date] = { ...day, meals: [...day.meals, JSON.parse(row.text)] };
         } else if (row.type === 'vocab-topic') {
             topics.push({ id: row.key, name: row.text });
         } else if (row.type === 'vocab-word') {

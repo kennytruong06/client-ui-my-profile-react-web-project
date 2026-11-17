@@ -11,6 +11,8 @@ import TodayPage from '@/pages/dashboard/TodayPage';
 import CalendarPage from '@/pages/dashboard/CalendarPage';
 import EnglishPage from '@/pages/dashboard/EnglishPage';
 import ProgressPage from '@/pages/dashboard/ProgressPage';
+import SchedulePage from '@/pages/dashboard/SchedulePage';
+import NutritionPage from '@/pages/dashboard/NutritionPage';
 import SettingsPage from '@/pages/dashboard/SettingsPage';
 import DailyPage from '@/pages/dashboard/DailyPage';
 
@@ -33,8 +35,10 @@ function AnimatedRoutes() {
                     <Route path="/memories" element={<MyMemoriesPage />} />
                     <Route path="/dashboard" element={<AuthGate><DashboardLayout /></AuthGate>}>
                         <Route index element={<TodayPage />} />
+                        <Route path="schedule" element={<SchedulePage />} />
                         <Route path="calendar" element={<CalendarPage />} />
                         <Route path="english" element={<EnglishPage />} />
+                        <Route path="nutrition" element={<NutritionPage />} />
                         <Route path="progress" element={<ProgressPage />} />
                         <Route path="daily" element={<DailyPage />} />
                         <Route path="settings" element={<SettingsPage />} />

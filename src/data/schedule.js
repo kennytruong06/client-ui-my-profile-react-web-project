@@ -24,7 +24,7 @@ const WORKDAY_FULL = [
         id: 'workout',
         category: 'exercise',
         mandatory: true,
-        start: '06:00',
+        start: '05:15',
         minutes: 25,
         timed: false,
         allowAlternative: true,
@@ -41,7 +41,7 @@ const WORKDAY_FULL = [
         id: 'english-1',
         category: 'english',
         mandatory: true,
-        start: '06:40',
+        start: '06:00',
         minutes: 60,
         roadmap: true,
         title: { en: 'English 1 · Listening', vi: 'Tiếng Anh 1 · Listening' },
@@ -51,7 +51,7 @@ const WORKDAY_FULL = [
         id: 'english-2',
         category: 'english',
         mandatory: true,
-        start: '12:00',
+        start: '12:45',
         minutes: 60,
         roadmap: true,
         title: { en: 'English 2 · Reading + vocabulary (lunch break)', vi: 'Tiếng Anh 2 · Reading + từ vựng (giờ nghỉ trưa)' },
@@ -91,7 +91,7 @@ const MUSIC_DAY = [
         id: 'light-workout',
         category: 'exercise',
         mandatory: true,
-        start: '06:00',
+        start: '05:15',
         minutes: 30,
         title: { en: 'Light morning workout', vi: 'Thể dục nhẹ buổi sáng' },
         details: { en: 'Free choice: brisk walk, push-ups or any light session that makes you sweat.', vi: 'Tự do: đi bộ nhanh, hít đất hoặc bài nhẹ nhàng ra mồ hôi.' },
@@ -100,7 +100,7 @@ const MUSIC_DAY = [
         id: 'english-am',
         category: 'english',
         mandatory: false,
-        start: '06:40',
+        start: '06:00',
         minutes: 60,
         roadmap: true,
         title: { en: 'English · morning bonus', vi: 'Tiếng Anh · buổi sáng (thêm)' },
@@ -110,7 +110,7 @@ const MUSIC_DAY = [
         id: 'english-lunch',
         category: 'english',
         mandatory: false,
-        start: '12:00',
+        start: '12:45',
         minutes: 60,
         roadmap: true,
         title: { en: 'English · lunch nap swap', vi: 'Tiếng Anh · thay giờ ngủ trưa' },
@@ -233,7 +233,7 @@ const SUNDAY = [
         id: 'sunday-workout',
         category: 'exercise',
         mandatory: true,
-        start: '06:30',
+        start: '05:30',
         minutes: 30,
         title: { en: 'Gentle morning workout', vi: 'Thể dục nhẹ buổi sáng' },
         details: { en: 'Walk, stretch or light bodyweight moves before going home.', vi: 'Đi bộ, giãn cơ hoặc bài nhẹ trước khi về quê.' },
@@ -242,7 +242,7 @@ const SUNDAY = [
         id: 'english-sun',
         category: 'english',
         mandatory: true,
-        start: '19:45',
+        start: '17:30',
         minutes: 120,
         roadmap: true,
         title: { en: 'English · evening 2 hours', vi: 'Tiếng Anh · 2 tiếng buổi tối' },
@@ -251,11 +251,11 @@ const SUNDAY = [
         id: 'piano-sun',
         category: 'piano',
         mandatory: true,
-        start: '21:50',
+        start: '19:45',
         minutes: 120,
         title: { en: 'Piano · 2 hours', vi: 'Piano · 2 tiếng' },
     },
-    skincareNight('23:50'),
+    skincareNight('22:15'),
 ];
 
 export const WEEK_TEMPLATE = {
@@ -268,7 +268,51 @@ export const WEEK_TEMPLATE = {
     6: SATURDAY,
 };
 
-export const WORK_HOURS = { start: '09:00', end: '17:30', days: [1, 2, 3, 4, 5] };
+export const WAKE_TIME = '05:00';
+export const BEDTIME = '23:00';
+export const WORK_HOURS = {
+    days: [1, 2, 3, 4, 5],
+    blocks: [
+        { start: '09:30', minutes: 180 },
+        { start: '14:00', minutes: 210 },
+    ],
+};
+
+const WORKDAY_MEALS = [
+    { id: 'breakfast', start: '07:00', minutes: 30 },
+    { id: 'lunch', start: '12:30', minutes: 15 },
+    { id: 'dinner', start: '17:45', minutes: 40 },
+];
+
+const MEALS_BY_WEEKDAY = {
+    0: [
+        { id: 'breakfast', start: '07:00', minutes: 30 },
+        { id: 'lunch', start: '12:00', minutes: 45 },
+        { id: 'dinner', start: '17:00', minutes: 30 },
+    ],
+    1: WORKDAY_MEALS,
+    2: [
+        { id: 'breakfast', start: '07:00', minutes: 30 },
+        { id: 'lunch', start: '12:30', minutes: 15 },
+        { id: 'dinner', start: '17:35', minutes: 25 },
+    ],
+    3: WORKDAY_MEALS,
+    4: [
+        { id: 'breakfast', start: '07:00', minutes: 30 },
+        { id: 'lunch', start: '12:30', minutes: 15 },
+        { id: 'dinner', start: '17:35', minutes: 25 },
+    ],
+    5: WORKDAY_MEALS,
+    6: [
+        { id: 'breakfast', start: '07:30', minutes: 30 },
+        { id: 'lunch', start: '11:45', minutes: 45 },
+        { id: 'dinner', start: '19:30', minutes: 30 },
+    ],
+};
+
+export function mealsForWeekday(weekday) {
+    return MEALS_BY_WEEKDAY[weekday] ?? [];
+}
 
 export function isTimed(task) {
     return task.timed !== false;

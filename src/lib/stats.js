@@ -1,5 +1,9 @@
 import { CATEGORIES, isTimed, tasksForWeekday } from '@/data/schedule';
-import { addDays, rangeKeys, weekdayOf } from '@/lib/date';
+import { ROADMAP_LENGTH } from '@/data/ieltsRoadmap';
+import { addDays, rangeKeys, todayKey, weekdayOf } from '@/lib/date';
+
+export const STREAK_THRESHOLD = 0.5;
+export const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 200, 365];
 
 export function dayStatus(journal, key) {
     const tasks = tasksForWeekday(weekdayOf(key));
@@ -8,6 +12,7 @@ export function dayStatus(journal, key) {
     const mandatoryDone = mandatory.filter((task) => records[task.id]?.status === 'done').length;
     const optional = tasks.filter((task) => !task.mandatory);
     const optionalDone = optional.filter((task) => records[task.id]?.status === 'done').length;
+    const keepTarget = Math.ceil(mandatory.length * STREAK_THRESHOLD);
     return {
         tasks,
         records,
@@ -16,7 +21,8 @@ export function dayStatus(journal, key) {
         optionalTotal: optional.length,
         optionalDone,
         ratio: mandatory.length ? mandatoryDone / mandatory.length : 1,
-        complete: mandatoryDone === mandatory.length,
+        keepTarget,
+        kept: mandatoryDone >= keepTarget,
     };
 }
 
@@ -38,8 +44,8 @@ function emptyBucket() {
 
 export function streaks(journal, today) {
     let current = 0;
-    let cursor = dayStatus(journal, today).complete ? today : addDays(today, -1);
-    while (cursor >= journal.trackingStart && dayStatus(journal, cursor).complete) {
+    let cursor = dayStatus(journal, today).kept ? today : addDays(today, -1);
+    while (cursor >= journal.trackingStart && dayStatus(journal, cursor).kept) {
         current += 1;
         cursor = addDays(cursor, -1);
     }
@@ -48,12 +54,85 @@ export function streaks(journal, today) {
     let run = 0;
     if (journal.trackingStart <= today) {
         rangeKeys(journal.trackingStart, today).forEach((key) => {
-            run = dayStatus(journal, key).complete ? run + 1 : key === today ? run : 0;
+            run = dayStatus(journal, key).kept ? run + 1 : key === today ? run : 0;
             best = Math.max(best, run);
         });
     }
 
     return { current, best: Math.max(best, current) };
+}
+
+export function roadmapDayFor(journal, date) {
+    const logs = journal.english.days;
+    const assigned = Object.keys(logs).find((day) => logs[day].date === date);
+    if (assigned) {
+        return Number(assigned);
+    }
+    if (date < todayKey()) {
+        return null;
+    }
+    const next = Array.from({ length: ROADMAP_LENGTH }, (_, index) => index + 1).find((day) => !logs[day]?.date && !logs[day]?.done);
+    return next ?? null;
+}
+
+export function categoryDayState(journal, key, category) {
+    if (key < journal.trackingStart) {
+        return { state: 'none', done: 0, need: 0, total: 0 };
+    }
+    const tasks = tasksForWeekday(weekdayOf(key)).filter((task) => task.category === category);
+    const records = journal.days[key]?.tasks ?? {};
+    const mandatory = tasks.filter((task) => task.mandatory);
+    const done = mandatory.filter((task) => records[task.id]?.status === 'done').length;
+    const need = Math.ceil(mandatory.length * STREAK_THRESHOLD);
+    const anyDone = tasks.some((task) => records[task.id]?.status === 'done');
+    let state = done >= need ? 'kept' : 'broken';
+    if (mandatory.length === 0) {
+        state = anyDone ? 'kept' : 'rest';
+    }
+    return { state, done, need, total: mandatory.length };
+}
+
+export function habitStreak(stateOf, journal, today) {
+    let current = 0;
+    let best = 0;
+    if (journal.trackingStart <= today) {
+        rangeKeys(journal.trackingStart, today).forEach((key) => {
+            const { state } = stateOf(key);
+            if (state === 'kept') {
+                current += 1;
+                best = Math.max(best, current);
+            } else if (state === 'broken' && key !== today) {
+                current = 0;
+            }
+        });
+    }
+    return { current, best };
+}
+
+export function habitDays(stateOf, today, count) {
+    return rangeKeys(addDays(today, -(count - 1)), today).map((key) => {
+        const { state } = stateOf(key);
+        return { key, state: key === today && state === 'broken' ? 'pending' : state };
+    });
+}
+
+export function streakDays(journal, today, count) {
+    return rangeKeys(addDays(today, -(count - 1)), today).map((key) => {
+        const status = dayStatus(journal, key);
+        let state = 'broken';
+        if (key < journal.trackingStart) {
+            state = 'none';
+        } else if (status.kept) {
+            state = 'kept';
+        } else if (key === today) {
+            state = 'pending';
+        }
+        return { key, state, done: status.mandatoryDone, total: status.mandatoryTotal };
+    });
+}
+
+export function nextMilestone(current) {
+    return STREAK_MILESTONES.find((milestone) => milestone > current) ?? null;
 }
 
 export function computeStats(journal, rangeStart, today) {

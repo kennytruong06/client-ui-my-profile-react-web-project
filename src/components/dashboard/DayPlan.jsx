@@ -3,7 +3,7 @@ import TaskCard from '@/components/dashboard/TaskCard';
 import { useI18n } from '@/i18n/I18nProvider';
 import { JOURNAL_EDITABLE, setDayNote, useJournal } from '@/store/journalStore';
 import { tasksForWeekday } from '@/data/schedule';
-import { roadmapDayFor } from '@/data/ieltsRoadmap';
+import { roadmapDayFor } from '@/lib/stats';
 import { todayKey, weekdayOf } from '@/lib/date';
 
 function Section({ title, count, children }) {
@@ -25,7 +25,7 @@ export default function DayPlan({ date }) {
     const tasks = tasksForWeekday(weekday);
     const day = journal.days[date] ?? { tasks: {}, note: '' };
     const isFuture = date > todayKey();
-    const roadmapDay = roadmapDayFor(journal.english.startDate, date);
+    const roadmapDay = roadmapDayFor(journal, date);
 
     const recordOf = (taskId) => ({ status: null, note: '', steps: [], stepValues: {}, variant: null, minutes: null, activity: '', ...day.tasks[taskId] });
     const countDone = (list) => `${list.filter((task) => day.tasks[task.id]?.status === 'done').length}/${list.length}`;

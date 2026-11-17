@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LuBookOpen, LuCheck, LuChevronLeft, LuChevronRight, LuExternalLink, LuFlag, LuHeadphones, LuLightbulb, LuMic, LuPenLine, LuPlus, LuTriangleAlert, LuX } from 'react-icons/lu';
+import { LuBookOpen, LuCalendarCheck, LuCheck, LuChevronLeft, LuChevronRight, LuExternalLink, LuFlag, LuHeadphones, LuLightbulb, LuMic, LuPenLine, LuPlus, LuTriangleAlert, LuX } from 'react-icons/lu';
 import PageHeader from '@/components/PageHeader';
 import ScoreChart from '@/components/charts/ScoreChart';
 import { useI18n } from '@/i18n/I18nProvider';
-import { JOURNAL_EDITABLE, englishLogOf, setEnglishSkillHidden, setEnglishStart, updateEnglishDay, updateEnglishSkill, useJournal } from '@/store/journalStore';
+import { JOURNAL_EDITABLE, assignEnglishDay, englishLogOf, setEnglishSkillHidden, updateEnglishDay, updateEnglishSkill, useJournal } from '@/store/journalStore';
 import { ENGLISH_SKILLS, SCORED_SKILLS } from '@/data/english';
 import VocabularyTab from '@/components/english/VocabularyTab';
 import PracticeTab from '@/components/english/PracticeTab';
-import { addDays, todayKey } from '@/lib/date';
+import { formatShortDate, todayKey } from '@/lib/date';
 import {
     CHECKPOINTS,
     DAILY_BLOCKS,
@@ -21,8 +21,8 @@ import {
     SCORING_NOTE,
     WEEKS,
     roadmapDay,
-    roadmapDayFor,
 } from '@/data/ieltsRoadmap';
+import { roadmapDayFor } from '@/lib/stats';
 
 const TABS = ['roadmap', 'vocabulary', 'practice', 'daily', 'method', 'resources', 'tracking'];
 
@@ -95,16 +95,16 @@ function DayLog({ dayNumber }) {
     const log = englishLogOf(journal, dayNumber);
     const item = roadmapDay(dayNumber);
     const checkpoint = CHECKPOINTS[dayNumber];
-    const date = journal.english.startDate ? addDays(journal.english.startDate, dayNumber - 1) : null;
     const visibleSkills = ENGLISH_SKILLS.filter((skill) => !log.hidden.includes(skill));
     const hiddenSkills = ENGLISH_SKILLS.filter((skill) => log.hidden.includes(skill));
+    const today = todayKey();
 
     return (
         <motion.div key={dayNumber} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="card p-5 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="max-w-2xl">
                     <p className="font-mono text-xs uppercase tracking-[0.2em] text-brand-400">
-                        {t('english.dayOf', { n: dayNumber })} · {t('english.weekLabel', { n: item.week })}{date && ` · ${date}`}
+                        {t('english.dayOf', { n: dayNumber })} · {t('english.weekLabel', { n: item.week })}
                     </p>
                     <p className="mt-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-faint">
                         <LuLightbulb size={13} className="text-brand-400" />
@@ -128,6 +128,23 @@ function DayLog({ dayNumber }) {
                     <LuCheck size={16} strokeWidth={3} />
                     {log.done ? t('english.dayDone') : t('english.markDayDone')}
                 </motion.button>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-ink-900/60 px-4 py-3">
+                <LuCalendarCheck size={16} className="text-brand-400" />
+                <span className="text-sm text-muted">{t('english.studyDate')}</span>
+                <input type="date" value={log.date} disabled={!JOURNAL_EDITABLE} onChange={(event) => assignEnglishDay(dayNumber, event.target.value)} className="field w-auto disabled:opacity-60" />
+                {JOURNAL_EDITABLE && log.date !== today && (
+                    <button type="button" onClick={() => assignEnglishDay(dayNumber, today)} className="rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-semibold text-ink-950 transition hover:bg-brand-400">
+                        {t('english.studyToday')}
+                    </button>
+                )}
+                {JOURNAL_EDITABLE && log.date && (
+                    <button type="button" onClick={() => assignEnglishDay(dayNumber, '')} className="text-sm text-faint transition hover:text-danger">
+                        {t('english.studyClear')}
+                    </button>
+                )}
+                {!log.date && <span className="text-xs text-faint">{t('english.studyHint')}</span>}
             </div>
 
             <div className="mb-3 mt-6 flex flex-wrap items-center justify-between gap-2">
@@ -206,6 +223,7 @@ function RoadmapTab({ selected, onSelect, logs, currentDay }) {
                                             <span className="mr-1 font-semibold">{t('common.day')} {dayNumber}:</span>
                                             {tx(text)}
                                             {CHECKPOINTS[dayNumber] && <LuFlag className="ml-1.5 inline text-brand-400" size={12} />}
+                                            {logs[dayNumber]?.date && <span className="ml-2 whitespace-nowrap rounded bg-brand-500/10 px-1.5 py-0.5 font-mono text-[11px] text-brand-300">{formatShortDate(logs[dayNumber].date, t)}</span>}
                                         </span>
                                     </button>
                                 );
@@ -380,10 +398,9 @@ function TrackingTab({ logs }) {
 export default function EnglishPage() {
     const { t } = useI18n();
     const journal = useJournal();
-    const { startDate, days: logs } = journal.english;
-    const today = todayKey();
-    const currentDay = roadmapDayFor(startDate, today);
-    const finished = Boolean(startDate) && !currentDay && today > startDate;
+    const logs = journal.english.days;
+    const currentDay = roadmapDayFor(journal, todayKey());
+    const finished = !currentDay;
     const [tab, setTab] = useState('roadmap');
     const [selected, setSelected] = useState(currentDay ?? 1);
     const doneTotal = Object.values(logs).filter((log) => log.done).length;
@@ -399,28 +416,12 @@ export default function EnglishPage() {
                 eyebrow={t('english.completed', { done: doneTotal, total: ROADMAP_LENGTH })}
                 title={t('english.title')}
                 subtitle={t('english.subtitle')}
-                action={(
-                    <label className="block">
-                        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-faint">{t('english.startDate')}</span>
-                        <input type="date" value={startDate ?? ''} disabled={!JOURNAL_EDITABLE} onChange={(event) => setEnglishStart(event.target.value || null)} className="field w-auto disabled:opacity-60" />
-                    </label>
-                )}
             />
 
             <div className="mb-6 h-2 overflow-hidden rounded-full bg-ink-800">
                 <motion.div className="h-full rounded-full bg-brand-500" initial={{ width: 0 }} animate={{ width: `${(doneTotal / ROADMAP_LENGTH) * 100}%` }} transition={{ duration: 0.8 }} />
             </div>
 
-            {!startDate && (
-                <div className="card mb-6 flex flex-col items-start gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-muted">{t('english.notStarted')}</p>
-                    {JOURNAL_EDITABLE && (
-                        <button type="button" onClick={() => setEnglishStart(today)} className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-ink-950 transition hover:bg-brand-400">
-                            {t('english.setStart')}
-                        </button>
-                    )}
-                </div>
-            )}
             {finished && <p className="card mb-6 p-5 text-brand-300">{t('english.finished')}</p>}
 
             <div className="mb-3 flex items-center justify-end gap-2">

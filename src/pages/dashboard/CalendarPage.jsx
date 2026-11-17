@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
+import { LuChevronLeft, LuChevronRight, LuFlame } from 'react-icons/lu';
 import PageHeader from '@/components/PageHeader';
 import DayPlan from '@/components/dashboard/DayPlan';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -122,7 +122,8 @@ export default function CalendarPage() {
                                             <span className="block h-full rounded-full bg-brand-500" style={{ width: `${Math.round((ratio ?? 0) * 100)}%` }} />
                                         </span>
                                     </span>
-                                    {hasNote && <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-white/70" />}
+                                    {ratio != null && status.kept && <LuFlame className="absolute right-1.5 top-1.5 text-orange-400" size={13} />}
+                                    {hasNote && <span className="absolute bottom-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-white/70 sm:bottom-auto sm:right-6 sm:top-2" />}
                                 </motion.button>
                             );
                         })}

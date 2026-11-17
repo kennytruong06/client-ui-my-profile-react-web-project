@@ -1,14 +1,16 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LuBookOpen, LuCalendarDays, LuChartLine, LuCircleAlert, LuCircleCheck, LuEye, LuImages, LuLoaderCircle, LuLock, LuSettings, LuSunrise } from 'react-icons/lu';
+import { LuBookOpen, LuCalendarDays, LuChartLine, LuCircleAlert, LuCircleCheck, LuClock, LuEye, LuImages, LuLoaderCircle, LuLock, LuSettings, LuSunrise, LuUtensils } from 'react-icons/lu';
 import { useI18n } from '@/i18n/I18nProvider';
 import { forgetUnlock } from '@/lib/auth';
 import { JOURNAL_EDITABLE, JOURNAL_FILE, useSaveStatus } from '@/store/journalStore';
 
 const LINKS = [
     { to: '/dashboard', key: 'today', icon: LuSunrise, end: true },
+    { to: '/dashboard/schedule', key: 'schedule', icon: LuClock },
     { to: '/dashboard/calendar', key: 'calendar', icon: LuCalendarDays },
     { to: '/dashboard/english', key: 'english', icon: LuBookOpen },
+    { to: '/dashboard/nutrition', key: 'nutrition', icon: LuUtensils },
     { to: '/dashboard/progress', key: 'progress', icon: LuChartLine },
     { to: '/dashboard/daily', key: 'daily', icon: LuImages },
     { to: '/dashboard/settings', key: 'settings', icon: LuSettings },
