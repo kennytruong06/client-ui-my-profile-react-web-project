@@ -1,6 +1,23 @@
 export const ENGLISH_SKILLS = ['listening', 'reading', 'writing', 'speaking'];
 
-export const SCORED_SKILLS = ['listening', 'reading'];
+export const CHART_SKILLS = ['listening', 'reading'];
+
+export const EXAMS = ['ielts', 'toeic'];
+
+export const SCORE_RULES = {
+    ielts: {
+        listening: { max: 40, step: 1 },
+        reading: { max: 40, step: 1 },
+        writing: { max: 9, step: 0.5 },
+        speaking: { max: 9, step: 0.5 },
+    },
+    toeic: {
+        listening: { max: 495, step: 5 },
+        reading: { max: 495, step: 5 },
+        writing: { max: 200, step: 10 },
+        speaking: { max: 200, step: 10 },
+    },
+};
 
 export const DEFAULT_TOPICS = [
     { id: 'travel', name: 'Travel' },

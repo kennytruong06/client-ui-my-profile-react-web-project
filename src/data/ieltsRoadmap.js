@@ -130,8 +130,8 @@ export const CHECKPOINTS = {
 };
 
 export const SCORING_NOTE = {
-    en: 'For Listening and Academic Reading, record correct answers out of 40 and use the conversion table of that test as a guide. Thresholds differ between tests. Writing and Speaking should be judged by IELTS criteria or by someone qualified.',
-    vi: 'Với Listening và Academic Reading, ghi số câu đúng trên 40 và dùng bảng quy đổi của đề tương ứng để tham khảo band. Ngưỡng quy đổi có thể khác nhau giữa các đề. Writing và Speaking nên được đánh giá theo tiêu chí IELTS hoặc nhờ người có chuyên môn phản hồi.',
+    en: 'For Listening and Academic Reading, record correct answers out of 40 and use the conversion table of that test as a guide. Thresholds differ between tests. Writing and Speaking should be judged by IELTS criteria or by someone qualified. For IELTS Writing and Speaking enter the band (0–9, steps of 0.5). TOEIC Listening and Reading are each scored up to 495 (total 990), and the separate TOEIC Speaking and Writing tests up to 200 each; enter the scaled scores from the result.',
+    vi: 'Với Listening và Academic Reading, ghi số câu đúng trên 40 và dùng bảng quy đổi của đề tương ứng để tham khảo band. Ngưỡng quy đổi có thể khác nhau giữa các đề. Writing và Speaking nên được đánh giá theo tiêu chí IELTS hoặc nhờ người có chuyên môn phản hồi. Với IELTS Writing và Speaking, nhập band (0–9, bước 0.5). TOEIC Listening và Reading mỗi phần tối đa 495 điểm (tổng 990), còn bài TOEIC Speaking và Writing thi riêng, mỗi phần tối đa 200 điểm; nhập điểm quy đổi ghi trên kết quả.',
 };
 
 export const PRINCIPLES = [
@@ -154,7 +154,7 @@ export const WEEKS = [
         week: 1,
         title: { en: 'Understand the test and fix basic listening errors', vi: 'Hiểu bài thi và sửa lỗi nghe cơ bản' },
         days: [
-            { en: 'Placement test in all 4 skills; save Listening/Reading results and your Writing/Speaking.', vi: 'Kiểm tra đầu vào 4 kỹ năng; lưu kết quả Listening/Reading và bài Writing/Speaking.' },
+            { en: 'One shared placement test for IELTS 8.0 and TOEIC 900 in all 4 skills (Listening, Reading, Writing, Speaking); record the scores and your Writing/Speaking in the Milestones tab.', vi: 'Kiểm tra đầu vào chung cho IELTS 8.0 và TOEIC 900, đủ 4 kỹ năng (Listening, Reading, Writing, Speaking); ghi điểm và bài Writing/Speaking vào tab Mốc đánh giá.' },
             { en: 'Listening gap-fill; practise numbers, names and addresses.', vi: 'Listening dạng điền thông tin; luyện nghe số, tên, địa chỉ.' },
             { en: 'Listening on places/directions; review prepositions and position words.', vi: 'Listening về địa điểm/chỉ đường; ôn giới từ và từ chỉ vị trí.' },
             { en: 'Listening multiple choice; spot distractors.', vi: 'Listening multiple choice; nhận diện đáp án gây nhiễu.' },

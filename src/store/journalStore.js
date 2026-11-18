@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { todayKey } from '@/lib/date';
-import { DEFAULT_TOPICS, ENGLISH_SKILLS } from '@/data/english';
+import { DEFAULT_TOPICS, ENGLISH_SKILLS, EXAMS } from '@/data/english';
 import { fromCsv, toCsv } from '@/lib/csv';
 import { emptyProfile } from '@/lib/nutrition';
 import journalCsv from '@/data/journal/journal.csv?raw';
@@ -16,7 +16,7 @@ function emptyState() {
     return {
         trackingStart: todayKey(),
         days: {},
-        english: { days: {} },
+        english: { days: {}, milestones: {} },
         vocab: { words: [], topics: DEFAULT_TOPICS },
         nutrition: emptyNutrition(),
     };
@@ -194,8 +194,23 @@ export function assignEnglishDay(dayNumber, date) {
     commit({ ...state, english: { ...state.english, days } });
 }
 
+export function milestoneOf(journal, dayNumber) {
+    const stored = journal.english.milestones?.[dayNumber];
+    return { ielts: { ...stored?.ielts }, toeic: { ...stored?.toeic } };
+}
+
+function milestonesWith(journal, dayNumber, exam, skill, patch) {
+    const current = milestoneOf(journal, dayNumber);
+    const entry = { score: '', note: '', ...current[exam][skill], ...patch };
+    return { ...journal.english.milestones, [dayNumber]: { ...current, [exam]: { ...current[exam], [skill]: entry } } };
+}
+
+export function updateMilestone(dayNumber, exam, skill, patch) {
+    commit({ ...state, english: { ...state.english, milestones: milestonesWith(state, dayNumber, exam, skill, patch) } });
+}
+
 export function updateEnglishSkill(dayNumber, skill, patch) {
-    withEnglishDay(dayNumber, (log) => ({ ...log, skills: { ...log.skills, [skill]: { note: '', score: '', ...log.skills[skill], ...patch } } }));
+    withEnglishDay(dayNumber, (log) => ({ ...log, skills: { ...log.skills, [skill]: { note: '', ...log.skills[skill], ...patch } } }));
 }
 
 export function setEnglishSkillHidden(dayNumber, skill, hidden) {
@@ -362,8 +377,20 @@ export function journalToRows(journal) {
             const entry = log.skills[skill];
             const hidden = log.hidden.includes(skill);
             if (entry || hidden) {
-                rows.push({ type: 'english-skill', key: `${dayNumber}.${skill}`, status: hidden ? 'hidden' : '', variant: entry?.score ?? '', text: entry?.note ?? '' });
+                rows.push({ type: 'english-skill', key: `${dayNumber}.${skill}`, status: hidden ? 'hidden' : '', text: entry?.note ?? '' });
             }
+        });
+    });
+
+    Object.keys(journal.english.milestones ?? {}).sort((a, b) => Number(a) - Number(b)).forEach((dayNumber) => {
+        const milestone = milestoneOf(journal, dayNumber);
+        EXAMS.forEach((exam) => {
+            ENGLISH_SKILLS.forEach((skill) => {
+                const entry = milestone[exam][skill];
+                if (entry && (entry.score || entry.note)) {
+                    rows.push({ type: 'milestone', key: `${dayNumber}.${exam}.${skill}`, variant: entry.score, text: entry.note });
+                }
+            });
         });
     });
 
@@ -415,9 +442,15 @@ function rowsToJournal(rows) {
             if (row.status === 'hidden') {
                 log.hidden = [...log.hidden, skill];
             } else {
-                log.skills = { ...log.skills, [skill]: { note: row.text, score: row.variant } };
+                log.skills = { ...log.skills, [skill]: { note: row.text } };
             }
             journal.english.days[dayNumber] = log;
+            if (row.variant) {
+                journal.english.milestones = milestonesWith(journal, dayNumber, 'ielts', skill, { score: row.variant });
+            }
+        } else if (row.type === 'milestone') {
+            const [dayNumber, exam, skill] = row.key.split('.');
+            journal.english.milestones = milestonesWith(journal, dayNumber, exam, skill, { score: row.variant, note: row.text });
         } else if (row.type === 'body-profile') {
             journal.nutrition.profile = { ...emptyProfile(), ...JSON.parse(row.text) };
         } else if (row.type === 'body-weight') {

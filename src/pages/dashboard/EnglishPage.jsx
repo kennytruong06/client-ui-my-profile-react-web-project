@@ -4,8 +4,8 @@ import { LuBookOpen, LuCalendarCheck, LuCheck, LuChevronLeft, LuChevronRight, Lu
 import PageHeader from '@/components/PageHeader';
 import ScoreChart from '@/components/charts/ScoreChart';
 import { useI18n } from '@/i18n/I18nProvider';
-import { JOURNAL_EDITABLE, assignEnglishDay, englishLogOf, setEnglishSkillHidden, updateEnglishDay, updateEnglishSkill, useJournal } from '@/store/journalStore';
-import { ENGLISH_SKILLS, SCORED_SKILLS } from '@/data/english';
+import { JOURNAL_EDITABLE, assignEnglishDay, englishLogOf, milestoneOf, setEnglishSkillHidden, updateEnglishDay, updateEnglishSkill, updateMilestone, useJournal } from '@/store/journalStore';
+import { CHART_SKILLS, ENGLISH_SKILLS, EXAMS, SCORE_RULES } from '@/data/english';
 import VocabularyTab from '@/components/english/VocabularyTab';
 import PracticeTab from '@/components/english/PracticeTab';
 import { formatShortDate, todayKey } from '@/lib/date';
@@ -24,14 +24,17 @@ import {
 } from '@/data/ieltsRoadmap';
 import { roadmapDayFor } from '@/lib/stats';
 
-const TABS = ['roadmap', 'vocabulary', 'practice', 'daily', 'method', 'resources', 'tracking'];
+const TABS = ['roadmap', 'vocabulary', 'practice', 'daily', 'method', 'resources', 'milestones'];
+
+const MILESTONE_DAYS = Object.keys(CHECKPOINTS).map(Number);
+
+const EXAM_LABELS = { ielts: 'IELTS', toeic: 'TOEIC' };
 
 const SKILL_ICONS = { listening: LuHeadphones, reading: LuBookOpen, writing: LuPenLine, speaking: LuMic };
 
 function SkillCard({ dayNumber, skill, entry, index }) {
     const { t } = useI18n();
     const Icon = SKILL_ICONS[skill];
-    const scored = SCORED_SKILLS.includes(skill);
 
     return (
         <motion.div
@@ -48,22 +51,6 @@ function SkillCard({ dayNumber, skill, entry, index }) {
                     {t(`english.skills.${skill}`)}
                 </h4>
                 <div className="flex items-center gap-2">
-                    {scored && (
-                        <label className="flex items-center gap-1.5 text-xs text-faint">
-                            <input
-                                type="number"
-                                min={0}
-                                max={40}
-                                inputMode="numeric"
-                                value={entry?.score ?? ''}
-                                readOnly={!JOURNAL_EDITABLE}
-                                onChange={(event) => updateEnglishSkill(dayNumber, skill, { score: event.target.value === '' ? '' : String(Math.max(0, Math.min(40, Number(event.target.value)))) })}
-                                placeholder="—"
-                                className="field w-16 px-2 py-1 text-center font-mono"
-                            />
-                            /40
-                        </label>
-                    )}
                     {JOURNAL_EDITABLE && (
                         <button
                             type="button"
@@ -89,7 +76,7 @@ function SkillCard({ dayNumber, skill, entry, index }) {
     );
 }
 
-function DayLog({ dayNumber }) {
+function DayLog({ dayNumber, onOpenMilestones }) {
     const { t, tx } = useI18n();
     const journal = useJournal();
     const log = englishLogOf(journal, dayNumber);
@@ -112,10 +99,15 @@ function DayLog({ dayNumber }) {
                     </p>
                     <h2 className="mt-1 font-display text-xl font-semibold sm:text-2xl">{tx(item.text)}</h2>
                     {checkpoint && (
-                        <p className="mt-3 inline-flex items-center gap-2 rounded-lg bg-brand-500/10 px-3 py-1.5 text-sm text-brand-300">
-                            <LuFlag size={14} />
-                            {t('english.checkpoint')}: {tx(checkpoint)}
-                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <p className="inline-flex items-center gap-2 rounded-lg bg-brand-500/10 px-3 py-1.5 text-sm text-brand-300">
+                                <LuFlag size={14} />
+                                {t('english.checkpoint')}: {tx(checkpoint)}
+                            </p>
+                            <button type="button" onClick={() => onOpenMilestones(dayNumber)} className="rounded-lg border border-brand-500/40 px-3 py-1.5 text-sm text-brand-300 transition hover:bg-brand-500/10">
+                                {t('english.openMilestones')}
+                            </button>
+                        </div>
                     )}
                 </div>
                 <motion.button
@@ -332,49 +324,149 @@ function ResourcesTab() {
     );
 }
 
-function TrackingTab({ logs }) {
+function ScoreField({ rule, value, onChange }) {
+    const handleChange = (raw) => {
+        const number = Number(raw);
+        if (raw === '' || Number.isNaN(number)) {
+            onChange('');
+        } else if (number > rule.max) {
+            onChange(String(rule.max));
+        } else {
+            onChange(number < 0 ? '0' : raw);
+        }
+    };
+
+    return (
+        <label className="flex items-center gap-1.5 text-xs text-faint">
+            <input
+                type="number"
+                min={0}
+                max={rule.max}
+                step={rule.step}
+                inputMode="decimal"
+                value={value}
+                readOnly={!JOURNAL_EDITABLE}
+                onChange={(event) => handleChange(event.target.value)}
+                placeholder="—"
+                className="field w-20 px-2 py-1 text-center font-mono"
+            />
+            /{rule.max}
+        </label>
+    );
+}
+
+function MilestoneExam({ dayNumber, exam, entries }) {
+    const { t } = useI18n();
+
+    return (
+        <div>
+            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-brand-400">{EXAM_LABELS[exam]}</h4>
+            <div className="space-y-2">
+                {ENGLISH_SKILLS.map((skill) => {
+                    const Icon = SKILL_ICONS[skill];
+                    const entry = entries[skill];
+                    return (
+                        <div key={skill} className="rounded-xl border border-line bg-ink-900/60 p-3">
+                            <div className="flex items-center justify-between gap-2">
+                                <span className="flex items-center gap-2 text-sm font-medium">
+                                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-500/10 text-brand-400"><Icon size={14} /></span>
+                                    {t(`english.skills.${skill}`)}
+                                </span>
+                                <ScoreField rule={SCORE_RULES[exam][skill]} value={entry?.score ?? ''} onChange={(score) => updateMilestone(dayNumber, exam, skill, { score })} />
+                            </div>
+                            <input
+                                type="text"
+                                value={entry?.note ?? ''}
+                                readOnly={!JOURNAL_EDITABLE}
+                                onChange={(event) => updateMilestone(dayNumber, exam, skill, { note: event.target.value })}
+                                placeholder={JOURNAL_EDITABLE ? t('english.milestoneNotePlaceholder') : '—'}
+                                className="field mt-2"
+                            />
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+function MilestoneTable({ exam, journal }) {
+    const { t } = useI18n();
+
+    return (
+        <div className="mt-5 overflow-x-auto">
+            <h4 className="mb-1 text-xs font-semibold uppercase tracking-wider text-brand-400">{EXAM_LABELS[exam]}</h4>
+            <table className="w-full text-left text-sm">
+                <thead className="text-xs uppercase tracking-wider text-faint">
+                    <tr>
+                        <th className="py-2 font-semibold">{t('english.tableDay')}</th>
+                        {ENGLISH_SKILLS.map((skill) => (
+                            <th key={skill} className="py-2 font-semibold">{t(`english.skills.${skill}`)}</th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody className="font-mono">
+                    {MILESTONE_DAYS.map((day) => {
+                        const entries = milestoneOf(journal, day)[exam];
+                        return (
+                            <tr key={day} className="border-t border-line">
+                                <td className="py-2">{day}</td>
+                                {ENGLISH_SKILLS.map((skill) => (
+                                    <td key={skill} className="py-2">{entries[skill]?.score || '—'}</td>
+                                ))}
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
+function MilestonesTab({ journal, activeDay, onSelect }) {
     const { t, tx } = useI18n();
-    const points = Object.entries(logs).flatMap(([day, log]) => SCORED_SKILLS
-        .filter((skill) => log.skills?.[skill]?.score !== undefined && log.skills[skill].score !== '')
-        .map((skill) => ({ day: Number(day), series: skill, value: Number(log.skills[skill].score) })));
-    const rows = [...new Set(points.map((point) => point.day))].sort((a, b) => a - b);
+    const hasScore = (day) => EXAMS.some((exam) => ENGLISH_SKILLS.some((skill) => milestoneOf(journal, day)[exam][skill]?.score));
+    const points = MILESTONE_DAYS.flatMap((day) => CHART_SKILLS
+        .filter((skill) => milestoneOf(journal, day).ielts[skill]?.score)
+        .map((skill) => ({ day, series: skill, value: Number(milestoneOf(journal, day).ielts[skill].score) })));
+    const title = activeDay === 1 ? t('english.milestoneBaseline') : tx(CHECKPOINTS[activeDay]);
 
     return (
         <div className="space-y-6">
             <section className="card p-5">
-                <h3 className="mb-4 font-display font-semibold">{t('english.chartTitle')}</h3>
-                <ScoreChart points={points} />
-                {rows.length > 0 && (
-                    <table className="mt-4 w-full text-left text-sm">
-                        <thead className="text-xs uppercase tracking-wider text-faint">
-                            <tr>
-                                <th className="py-2 font-semibold">{t('english.tableDay')}</th>
-                                <th className="py-2 font-semibold">Listening</th>
-                                <th className="py-2 font-semibold">Reading</th>
-                            </tr>
-                        </thead>
-                        <tbody className="font-mono">
-                            {rows.map((day) => (
-                                <tr key={day} className="border-t border-line">
-                                    <td className="py-2">{day}</td>
-                                    <td className="py-2">{logs[day]?.skills?.listening?.score || '—'}</td>
-                                    <td className="py-2">{logs[day]?.skills?.reading?.score || '—'}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+                <h3 className="font-display font-semibold">{t('english.milestoneOverview')}</h3>
+                <p className="mt-1 text-sm font-medium text-brand-300">{t('english.milestoneGoal')}</p>
+                <p className="mt-1 text-sm text-muted">{t('english.milestoneIntro')}</p>
+                <div className="mt-4">
+                    <ScoreChart points={points} />
+                </div>
+                {EXAMS.map((exam) => (
+                    <MilestoneTable key={exam} exam={exam} journal={journal} />
+                ))}
                 <p className="mt-4 text-sm text-muted">{tx(SCORING_NOTE)}</p>
             </section>
 
             <section className="card p-5">
-                <h3 className="mb-4 font-display font-semibold">{t('english.checkpoint')}</h3>
-                <div className="grid gap-2 sm:grid-cols-2">
-                    {Object.entries(CHECKPOINTS).map(([day, text]) => (
-                        <div key={day} className="flex items-start gap-3 rounded-lg bg-ink-850 p-3 text-sm">
-                            <span className="rounded-md bg-brand-500/15 px-2 py-0.5 font-mono text-xs text-brand-300">{t('common.day')} {day}</span>
-                            <span className="text-muted">{tx(text)}</span>
-                        </div>
+                <div className="flex flex-wrap gap-2">
+                    {MILESTONE_DAYS.map((day) => (
+                        <button
+                            key={day}
+                            type="button"
+                            onClick={() => onSelect(day)}
+                            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 font-mono text-sm transition ${activeDay === day ? 'bg-brand-500 text-ink-950' : 'border border-line text-muted hover:text-white'}`}
+                        >
+                            {t('common.day')} {day}
+                            {hasScore(day) && <span className={`h-1.5 w-1.5 rounded-full ${activeDay === day ? 'bg-ink-950' : 'bg-brand-400'}`} />}
+                        </button>
+                    ))}
+                </div>
+                <p className="mt-5 flex items-center gap-2 font-display text-lg font-semibold">
+                    <LuFlag size={16} className="text-brand-400" />
+                    {title}
+                </p>
+                <div className="mt-4 grid gap-5 md:grid-cols-2">
+                    {EXAMS.map((exam) => (
+                        <MilestoneExam key={`${activeDay}-${exam}`} dayNumber={activeDay} exam={exam} entries={milestoneOf(journal, activeDay)[exam]} />
                     ))}
                 </div>
             </section>
@@ -402,12 +494,19 @@ export default function EnglishPage() {
     const currentDay = roadmapDayFor(journal, todayKey());
     const finished = !currentDay;
     const [tab, setTab] = useState('roadmap');
+    const [milestoneDay, setMilestoneDay] = useState(MILESTONE_DAYS[0]);
     const [selected, setSelected] = useState(currentDay ?? 1);
     const doneTotal = Object.values(logs).filter((log) => log.done).length;
 
     const selectDay = (dayNumber) => {
         setSelected(dayNumber);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const openMilestones = (dayNumber) => {
+        setMilestoneDay(dayNumber);
+        setTab('milestones');
+        document.getElementById('english-tabs')?.scrollIntoView({ behavior: 'smooth' });
     };
 
     return (
@@ -433,12 +532,12 @@ export default function EnglishPage() {
                 </button>
             </div>
             <AnimatePresence mode="wait">
-                <DayLog key={selected} dayNumber={selected} />
+                <DayLog key={selected} dayNumber={selected} onOpenMilestones={openMilestones} />
             </AnimatePresence>
 
             <p className="mt-4 text-xs text-faint">{t('english.disclaimer')}</p>
 
-            <div className="sticky top-14 z-20 -mx-4 mt-10 mb-6 overflow-x-auto bg-ink-950/80 px-4 py-3 backdrop-blur-xl [mask-image:linear-gradient(to_right,black_88%,transparent)] xl:[mask-image:none]">
+            <div id="english-tabs" className="sticky top-14 z-20 -mx-4 mt-10 mb-6 overflow-x-auto bg-ink-950/80 px-4 py-3 backdrop-blur-xl [mask-image:linear-gradient(to_right,black_88%,transparent)] xl:[mask-image:none]">
                 <div className="flex w-max gap-1 rounded-xl border border-line bg-ink-900 p-1">
                     {TABS.map((key) => (
                         <button
@@ -462,7 +561,7 @@ export default function EnglishPage() {
                     {tab === 'daily' && <DailyTab />}
                     {tab === 'method' && <MethodTab />}
                     {tab === 'resources' && <ResourcesTab />}
-                    {tab === 'tracking' && <TrackingTab logs={logs} />}
+                    {tab === 'milestones' && <MilestonesTab journal={journal} activeDay={milestoneDay} onSelect={setMilestoneDay} />}
                 </motion.div>
             </AnimatePresence>
         </div>
