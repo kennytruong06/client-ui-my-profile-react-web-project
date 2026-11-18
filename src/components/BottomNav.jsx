@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LuHouse, LuImages, LuLayoutDashboard } from 'react-icons/lu';
+import { LuHouse, LuImages, LuLayoutDashboard, LuTimer } from 'react-icons/lu';
 import { useI18n } from '@/i18n/I18nProvider';
 
 const ITEMS = [
     { to: '/', key: 'home', icon: LuHouse },
     { to: '/memories', key: 'memories', icon: LuImages },
+    { to: '/focus', key: 'focus', icon: LuTimer },
     { to: '/dashboard', key: 'dashboard', icon: LuLayoutDashboard },
 ];
 

@@ -12,6 +12,7 @@ export default {
         lock: 'Lock',
         schedule: 'Schedule',
         nutrition: 'Nutrition',
+        focus: 'Focus',
     },
     common: {
         minutes: '{n} min',
@@ -454,6 +455,29 @@ export default {
             empty: 'No data yet. Start ticking tasks today.',
         },
         trackingSince: 'Tracking since {date}',
+    },
+    focus: {
+        title: 'Focus',
+        fullscreen: 'Fullscreen',
+        exitFullscreen: 'Exit fullscreen',
+        minutesShort: 'min',
+        start: 'Start',
+        pause: 'Pause',
+        resume: 'Resume',
+        reset: 'Reset',
+        again: 'New session',
+        custom: 'Minutes',
+        locked: 'Press reset to change the duration or the theme.',
+        themes: {
+            study: 'Study',
+            work: 'Work',
+        },
+        status: {
+            idle: 'Ready',
+            running: 'Focusing',
+            paused: 'Paused',
+            done: 'Done',
+        },
     },
     journal: {
         saving: 'Saving to {file}…',

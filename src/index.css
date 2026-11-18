@@ -38,6 +38,136 @@
     to { background-position: -200% 0; }
 }
 
+@keyframes scenery-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-800px); }
+}
+
+@keyframes limb-swing {
+    from { transform: rotate(-28deg); }
+    to { transform: rotate(28deg); }
+}
+
+@keyframes arm-swing {
+    from { transform: rotate(-24deg); }
+    to { transform: rotate(24deg); }
+}
+
+@keyframes type-tap {
+    from { transform: rotate(-6deg); }
+    to { transform: rotate(6deg); }
+}
+
+@keyframes write-scribble {
+    from { transform: rotate(-4deg) translateX(-1px); }
+    to { transform: rotate(5deg) translateX(2px); }
+}
+
+@keyframes wave-hand {
+    from { transform: rotate(-24deg); }
+    to { transform: rotate(24deg); }
+}
+
+@keyframes clap-hands {
+    from { transform: rotate(-8deg); }
+    to { transform: rotate(8deg); }
+}
+
+@keyframes body-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-1.4px); }
+}
+
+@keyframes body-step {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
+@keyframes body-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+@keyframes body-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-1.8px); }
+    75% { transform: translateX(1.8px); }
+}
+
+@keyframes mouth-talk {
+    from { transform: scaleY(0.5); }
+    to { transform: scaleY(1.2); }
+}
+
+@keyframes emote-float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-4px) scale(1.07); }
+}
+
+@keyframes ring-shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-9deg); }
+    75% { transform: rotate(9deg); }
+}
+
+@keyframes spin-turn {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes bus-cycle {
+    0% { transform: translateX(620px); }
+    22%, 62% { transform: translateX(0); }
+    100% { transform: translateX(-700px); }
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 1; }
+}
+
+.scenery {
+    animation: scenery-scroll 30s linear infinite;
+}
+
+.anim {
+    transform-origin: 0 0;
+}
+
+.p-leg-a { animation: limb-swing 0.6s ease-in-out infinite alternate; }
+.p-leg-b { animation: limb-swing 0.6s ease-in-out infinite alternate-reverse; }
+.p-arm-a { animation: arm-swing 0.6s ease-in-out infinite alternate; }
+.p-arm-b { animation: arm-swing 0.6s ease-in-out infinite alternate-reverse; }
+.p-type-a { animation: type-tap 0.32s ease-in-out infinite alternate; }
+.p-type-b { animation: type-tap 0.32s ease-in-out infinite alternate-reverse; }
+.p-write { animation: write-scribble 0.4s ease-in-out infinite alternate; }
+.p-wave { animation: wave-hand 0.5s ease-in-out infinite alternate; }
+.p-clap { animation: clap-hands 0.3s ease-in-out infinite alternate; }
+.b-bob { animation: body-bob 2.2s ease-in-out infinite; }
+.b-step { animation: body-step 0.6s ease-in-out infinite; }
+.b-bounce { animation: body-bounce 0.5s ease-in-out infinite; }
+.b-shake { animation: body-shake 0.14s linear infinite; }
+.emote-float { animation: emote-float 1.6s ease-in-out infinite; }
+.ring { animation: ring-shake 0.18s linear infinite; }
+.clock-hand { animation: spin-turn 60s linear infinite; }
+.bus-cycle { animation: bus-cycle 18s ease-in-out infinite; }
+
+.p-talk {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    animation: mouth-talk 0.26s ease-in-out infinite alternate;
+}
+
+.star {
+    animation: twinkle 3s ease-in-out infinite;
+}
+
+.scene-paused .scenery,
+.scene-paused .anim,
+.scene-paused .p-talk,
+.scene-paused .star {
+    animation-play-state: paused;
+}
+
 html, body, #root {
     min-height: 100%;
     margin: 0;

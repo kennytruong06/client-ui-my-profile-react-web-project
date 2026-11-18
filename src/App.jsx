@@ -15,6 +15,7 @@ import SchedulePage from '@/pages/dashboard/SchedulePage';
 import NutritionPage from '@/pages/dashboard/NutritionPage';
 import SettingsPage from '@/pages/dashboard/SettingsPage';
 import DailyPage from '@/pages/dashboard/DailyPage';
+import FocusPage from '@/pages/focus/FocusPage';
 
 function AnimatedRoutes() {
     const location = useLocation();
@@ -50,13 +51,27 @@ function AnimatedRoutes() {
     );
 }
 
-export default function App() {
+function Shell() {
+    const { pathname } = useLocation();
+
+    if (pathname === '/focus') {
+        return <FocusPage />;
+    }
+
     return (
-        <BrowserRouter>
+        <>
             <Backdrop />
             <TopBar />
             <AnimatedRoutes />
             <BottomNav />
+        </>
+    );
+}
+
+export default function App() {
+    return (
+        <BrowserRouter>
+            <Shell />
         </BrowserRouter>
     );
 }

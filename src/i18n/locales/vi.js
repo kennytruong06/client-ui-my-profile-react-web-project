@@ -12,6 +12,7 @@ export default {
         lock: 'Khoá',
         schedule: 'Lịch trình',
         nutrition: 'Ăn uống',
+        focus: 'Tập trung',
     },
     common: {
         minutes: '{n} phút',
@@ -454,6 +455,29 @@ export default {
             empty: 'Chưa có dữ liệu. Bắt đầu tích việc từ hôm nay.',
         },
         trackingSince: 'Theo dõi từ {date}',
+    },
+    focus: {
+        title: 'Tập trung',
+        fullscreen: 'Toàn màn hình',
+        exitFullscreen: 'Thoát toàn màn hình',
+        minutesShort: 'phút',
+        start: 'Bắt đầu',
+        pause: 'Tạm dừng',
+        resume: 'Tiếp tục',
+        reset: 'Làm lại',
+        again: 'Phiên mới',
+        custom: 'Số phút',
+        locked: 'Bấm làm lại để đổi thời lượng hoặc chủ đề.',
+        themes: {
+            study: 'Học tập',
+            work: 'Làm việc',
+        },
+        status: {
+            idle: 'Sẵn sàng',
+            running: 'Đang tập trung',
+            paused: 'Tạm dừng',
+            done: 'Hoàn thành',
+        },
     },
     journal: {
         saving: 'Đang lưu vào {file}…',
