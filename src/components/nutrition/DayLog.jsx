@@ -197,7 +197,7 @@ function MealRow({ date, meal, locked }) {
         <li className="flex items-center gap-3 rounded-xl border border-line bg-ink-900/50 px-3 py-2.5">
             <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{mealName(meal, tx)}</p>
-                <p className="truncate text-xs text-faint">{known ? tx(known.serving) : t('nutrition.day.myFood')}</p>
+                <p className="truncate text-xs text-faint">{known ? `${tx(known.serving)}${meal.qty === 1 ? '' : ` × ${meal.qty}`}` : t('nutrition.day.myFood')}</p>
             </div>
             {!locked && base && <AmountInput value={Math.round(meal.qty * base.amount * 10) / 10} unit={base.unit} onCommit={setAmount} />}
             {!locked && !base && (
