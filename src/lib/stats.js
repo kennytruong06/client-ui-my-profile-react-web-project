@@ -1,6 +1,6 @@
 import { CATEGORIES, isTimed, tasksForWeekday } from '@/data/schedule';
 import { ROADMAP_LENGTH } from '@/data/ieltsRoadmap';
-import { addDays, rangeKeys, todayKey, weekdayOf } from '@/lib/date';
+import { addDays, rangeKeys, weekdayOf } from '@/lib/date';
 
 export const STREAK_THRESHOLD = 0.5;
 export const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 200, 365];
@@ -65,14 +65,12 @@ export function streaks(journal, today) {
 export function roadmapDayFor(journal, date) {
     const logs = journal.english.days;
     const assigned = Object.keys(logs).find((day) => logs[day].date === date);
-    if (assigned) {
-        return Number(assigned);
-    }
-    if (date < todayKey()) {
-        return null;
-    }
-    const next = Array.from({ length: ROADMAP_LENGTH }, (_, index) => index + 1).find((day) => !logs[day]?.date && !logs[day]?.done);
-    return next ?? null;
+    return assigned ? Number(assigned) : null;
+}
+
+export function suggestedRoadmapDay(journal) {
+    const logs = journal.english.days;
+    return Array.from({ length: ROADMAP_LENGTH }, (_, index) => index + 1).find((day) => !logs[day]?.date && !logs[day]?.done) ?? null;
 }
 
 export function categoryDayState(journal, key, category) {

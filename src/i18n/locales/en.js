@@ -112,7 +112,8 @@ export default {
         allDone: 'Everything for today is done. Great job!',
         streak: 'Day streak',
         roadmapDay: 'IELTS day',
-        notStarted: 'Not started',
+        notAssigned: 'No roadmap day assigned',
+        roadmapSuggested: 'Suggestion: day {n}. Assign it on the English page when you follow the roadmap.',
     },
     streak: {
         title: 'Streak',
@@ -382,6 +383,7 @@ export default {
         steps: 'Steps',
         pickVariant: 'Choose today’s workout',
         openRoadmap: 'Open IELTS day {n}',
+        openRoadmapSuggested: 'Roadmap suggestion: IELTS day {n}',
         futureDay: 'This day is in the future. You can read the plan but not tick it yet.',
         sundayInfo: 'Sunday: hometown day. Travel back around 19:30, then study.',
     },

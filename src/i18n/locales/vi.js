@@ -112,7 +112,8 @@ export default {
         allDone: 'Đã xong hết việc hôm nay. Quá đỉnh!',
         streak: 'Chuỗi ngày',
         roadmapDay: 'Ngày IELTS',
-        notStarted: 'Chưa bắt đầu',
+        notAssigned: 'Chưa gán lộ trình',
+        roadmapSuggested: 'Gợi ý: ngày {n}. Gán ở trang Tiếng Anh khi bạn học theo lộ trình.',
     },
     streak: {
         title: 'Chuỗi lửa',
@@ -382,6 +383,7 @@ export default {
         steps: 'Các bước',
         pickVariant: 'Chọn bài tập hôm nay',
         openRoadmap: 'Mở ngày IELTS {n}',
+        openRoadmapSuggested: 'Gợi ý lộ trình: ngày IELTS {n}',
         futureDay: 'Ngày này chưa tới. Bạn xem trước kế hoạch được nhưng chưa tích được.',
         sundayInfo: 'Chủ nhật: về quê. Khoảng 19:30 ra lại rồi học tiếp.',
     },

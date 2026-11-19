@@ -334,7 +334,7 @@ function AlternativeEditor({ date, task, record, locked }) {
     );
 }
 
-export default function TaskCard({ date, task, record = EMPTY_RECORD, disabled = false, roadmapDay = null, index = 0 }) {
+export default function TaskCard({ date, task, record = EMPTY_RECORD, disabled = false, roadmapDay = null, roadmapSuggestion = null, index = 0 }) {
     const { t, tx } = useI18n();
     const status = record.status;
     const locked = disabled || !JOURNAL_EDITABLE;
@@ -402,9 +402,9 @@ export default function TaskCard({ date, task, record = EMPTY_RECORD, disabled =
                         {tx(task.title)}
                     </h3>
                     {task.details && <p className="mt-1 text-sm text-muted">{tx(task.details)}</p>}
-                    {task.roadmap && roadmapDay && (
+                    {task.roadmap && (roadmapDay || roadmapSuggestion) && (
                         <Link to="/dashboard/english" className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-400 hover:text-brand-300">
-                            {t('day.openRoadmap', { n: roadmapDay })}
+                            {roadmapDay ? t('day.openRoadmap', { n: roadmapDay }) : t('day.openRoadmapSuggested', { n: roadmapSuggestion })}
                             <LuArrowRight size={14} />
                         </Link>
                     )}

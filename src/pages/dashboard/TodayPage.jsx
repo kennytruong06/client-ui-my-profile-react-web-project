@@ -9,7 +9,7 @@ import CategoryIcon from '@/components/CategoryIcon';
 import useNow from '@/hooks/useNow';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useJournal } from '@/store/journalStore';
-import { dayStatus, roadmapDayFor } from '@/lib/stats';
+import { dayStatus, roadmapDayFor, suggestedRoadmapDay } from '@/lib/stats';
 import { endTime, formatLongDate, minutesOfDay, toKey } from '@/lib/date';
 
 function greetingKey(hour) {
@@ -43,6 +43,7 @@ export default function TodayPage() {
     const today = toKey(now);
     const status = dayStatus(journal, today);
     const roadmapDay = roadmapDayFor(journal, today);
+    const suggestedDay = suggestedRoadmapDay(journal);
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
     const nextTask = status.tasks
@@ -86,8 +87,9 @@ export default function TodayPage() {
 
                 <StatCard icon={LuBookOpen} label={t('today.roadmapDay')} delay={0.1}>
                     <p className="font-display text-4xl font-semibold">
-                        {roadmapDay ? <>{roadmapDay}<span className="text-xl text-faint">/60</span></> : <span className="text-base font-normal text-muted">{t('today.notStarted')}</span>}
+                        {roadmapDay ? <>{roadmapDay}<span className="text-xl text-faint">/60</span></> : <span className="text-base font-normal text-muted">{t('today.notAssigned')}</span>}
                     </p>
+                    {!roadmapDay && suggestedDay && <p className="mt-1 text-xs text-faint">{t('today.roadmapSuggested', { n: suggestedDay })}</p>}
                 </StatCard>
             </div>
 

@@ -3,7 +3,7 @@ import TaskCard from '@/components/dashboard/TaskCard';
 import { useI18n } from '@/i18n/I18nProvider';
 import { JOURNAL_EDITABLE, setDayNote, useJournal } from '@/store/journalStore';
 import { tasksForWeekday } from '@/data/schedule';
-import { roadmapDayFor } from '@/lib/stats';
+import { roadmapDayFor, suggestedRoadmapDay } from '@/lib/stats';
 import { todayKey, weekdayOf } from '@/lib/date';
 
 function Section({ title, count, children }) {
@@ -26,6 +26,7 @@ export default function DayPlan({ date }) {
     const day = journal.days[date] ?? { tasks: {}, note: '' };
     const isFuture = date > todayKey();
     const roadmapDay = roadmapDayFor(journal, date);
+    const roadmapSuggestion = !roadmapDay && date >= todayKey() ? suggestedRoadmapDay(journal) : null;
 
     const recordOf = (taskId) => ({ status: null, note: '', steps: [], stepValues: {}, variant: null, minutes: null, activity: '', ...day.tasks[taskId] });
     const countDone = (list) => `${list.filter((task) => day.tasks[task.id]?.status === 'done').length}/${list.length}`;
@@ -47,14 +48,14 @@ export default function DayPlan({ date }) {
 
             <Section title={t('day.mandatoryTitle')} count={countDone(mandatory)}>
                 {mandatory.map((task, index) => (
-                    <TaskCard key={task.id} date={date} task={task} record={recordOf(task.id)} disabled={isFuture} roadmapDay={roadmapDay} index={index} />
+                    <TaskCard key={task.id} date={date} task={task} record={recordOf(task.id)} disabled={isFuture} roadmapDay={roadmapDay} roadmapSuggestion={roadmapSuggestion} index={index} />
                 ))}
             </Section>
 
             {optional.length > 0 && (
                 <Section title={t('day.optionalTitle')} count={countDone(optional)}>
                     {optional.map((task, index) => (
-                        <TaskCard key={task.id} date={date} task={task} record={recordOf(task.id)} disabled={isFuture} roadmapDay={roadmapDay} index={index} />
+                        <TaskCard key={task.id} date={date} task={task} record={recordOf(task.id)} disabled={isFuture} roadmapDay={roadmapDay} roadmapSuggestion={roadmapSuggestion} index={index} />
                     ))}
                 </Section>
             )}

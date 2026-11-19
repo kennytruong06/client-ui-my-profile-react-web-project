@@ -22,7 +22,7 @@ import {
     WEEKS,
     roadmapDay,
 } from '@/data/ieltsRoadmap';
-import { roadmapDayFor } from '@/lib/stats';
+import { roadmapDayFor, suggestedRoadmapDay } from '@/lib/stats';
 
 const TABS = ['roadmap', 'vocabulary', 'practice', 'daily', 'method', 'resources', 'milestones'];
 
@@ -491,7 +491,7 @@ export default function EnglishPage() {
     const { t } = useI18n();
     const journal = useJournal();
     const logs = journal.english.days;
-    const currentDay = roadmapDayFor(journal, todayKey());
+    const currentDay = roadmapDayFor(journal, todayKey()) ?? suggestedRoadmapDay(journal);
     const finished = !currentDay;
     const [tab, setTab] = useState('roadmap');
     const [milestoneDay, setMilestoneDay] = useState(MILESTONE_DAYS[0]);
