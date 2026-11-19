@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { LuMinus, LuPlus, LuSearch, LuTrash2, LuUtensils } from 'react-icons/lu';
 import ProgressRing from '@/components/charts/ProgressRing';
+import AmountField from '@/components/nutrition/AmountField';
 import { useI18n } from '@/i18n/I18nProvider';
 import { JOURNAL_EDITABLE, addMeal, removeMeal, setNutritionDay, setWeight, updateMeal } from '@/store/journalStore';
 import { FOODS, MEAL_SLOTS, foodById } from '@/data/foods';
@@ -42,31 +43,6 @@ function MacroBar({ label, value, target }) {
             <div className="h-1.5 overflow-hidden rounded-full bg-ink-800">
                 <motion.div className="h-full rounded-full bg-brand-500" initial={{ width: 0 }} animate={{ width: `${ratio * 100}%` }} transition={{ duration: 0.6 }} />
             </div>
-        </div>
-    );
-}
-
-function AmountInput({ value, unit, onCommit }) {
-    const { t } = useI18n();
-    const [text, setText] = useState(String(value));
-
-    useEffect(() => {
-        if (Number(text) !== value) {
-            setText(String(value));
-        }
-    }, [value]);
-
-    const change = (next) => {
-        setText(next);
-        if (Number(next) > 0) {
-            onCommit(Number(next));
-        }
-    };
-
-    return (
-        <div className="relative w-24 shrink-0">
-            <input type="number" inputMode="decimal" min="1" step="5" value={text} aria-label={t('nutrition.day.amount')} onChange={(event) => change(event.target.value)} className="field !py-1.5 pr-8 text-right font-mono !text-sm" />
-            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-faint">{unit}</span>
         </div>
     );
 }
@@ -199,7 +175,7 @@ function MealRow({ date, meal, locked }) {
                 <p className="truncate text-sm font-medium">{mealName(meal, tx)}</p>
                 <p className="truncate text-xs text-faint">{known ? `${tx(known.serving)}${meal.qty === 1 ? '' : ` × ${meal.qty}`}` : t('nutrition.day.myFood')}</p>
             </div>
-            {!locked && base && <AmountInput value={Math.round(meal.qty * base.amount * 10) / 10} unit={base.unit} onCommit={setAmount} />}
+            {!locked && base && <AmountField value={Math.round(meal.qty * base.amount * 10) / 10} unit={base.unit} onCommit={setAmount} />}
             {!locked && !base && (
                 <div className="flex items-center gap-1">
                     <button type="button" aria-label="Less" onClick={() => setQty(meal.qty - 0.5)} className="grid h-7 w-7 place-items-center rounded-lg border border-line text-muted transition hover:text-white"><LuMinus size={13} /></button>

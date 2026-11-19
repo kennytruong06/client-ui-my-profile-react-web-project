@@ -1,6 +1,10 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { LuChevronLeft, LuChevronRight, LuFileDown } from 'react-icons/lu';
 import PageHeader from '@/components/PageHeader';
+import FridgePanel from '@/components/nutrition/FridgePanel';
+import OverviewPanel from '@/components/nutrition/OverviewPanel';
+import PlanPanel from '@/components/nutrition/PlanPanel';
 import ProfilePanel from '@/components/nutrition/ProfilePanel';
 import DayLog from '@/components/nutrition/DayLog';
 import DayReport from '@/components/nutrition/DayReport';
@@ -11,14 +15,21 @@ import { addDays, formatLongDate, todayKey } from '@/lib/date';
 import { currentWeightKg, planOf, profileReady } from '@/lib/nutrition';
 import { printPdf } from '@/lib/printPdf';
 
+const TABS = ['log', 'overview', 'plan'];
+
 export default function NutritionPage() {
     const { t } = useI18n();
     const { nutrition } = useJournal();
     const today = todayKey();
     const [date, setDate] = useState(today);
+    const [tab, setTab] = useState('log');
     const ready = profileReady(nutrition.profile);
     const plan = ready ? planOf(nutrition.profile, currentWeightKg(nutrition)) : null;
     const hasMeals = (nutrition.days[date]?.meals.length ?? 0) > 0;
+    const openDay = (key) => {
+        setDate(key);
+        setTab('log');
+    };
 
     return (
         <div>
@@ -27,6 +38,31 @@ export default function NutritionPage() {
             <ProfilePanel nutrition={nutrition} />
 
             {plan && (
+                <div className="mb-6 flex w-max gap-1 rounded-xl border border-line bg-ink-900 p-1">
+                    {TABS.map((key) => (
+                        <button
+                            key={key}
+                            type="button"
+                            onClick={() => setTab(key)}
+                            className={`relative rounded-lg px-4 py-2 text-sm font-medium transition-colors ${tab === key ? 'text-ink-950' : 'text-muted hover:text-white'}`}
+                        >
+                            {tab === key && <motion.span layoutId="nutrition-tab" className="absolute inset-0 rounded-lg bg-brand-500" transition={{ type: 'spring', stiffness: 400, damping: 32 }} />}
+                            <span className="relative">{t(`nutrition.tabs.${key}`)}</span>
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {plan && tab === 'overview' && <OverviewPanel nutrition={nutrition} plan={plan} today={today} onOpenDay={openDay} />}
+
+            {plan && tab === 'plan' && (
+                <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+                    <FridgePanel nutrition={nutrition} today={today} />
+                    <PlanPanel nutrition={nutrition} plan={plan} today={today} />
+                </div>
+            )}
+
+            {plan && tab === 'log' && (
                 <>
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                         <p className="font-display text-lg font-semibold">{formatLongDate(date, t)}</p>

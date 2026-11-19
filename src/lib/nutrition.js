@@ -148,3 +148,84 @@ export function eatingStateFn(nutrition, plan) {
         return { state: healthy ? 'kept' : 'broken', eaten, burned, logged };
     };
 }
+
+const roundTo = (value, step) => Math.round(value / step) * step;
+
+export function foodBase(ref) {
+    const known = ref.foodId ? foodById(ref.foodId) : null;
+    if (known) {
+        return { amount: known.amount, unit: known.unit, kcal: known.kcal, protein: known.protein, carbs: known.carbs, fat: known.fat };
+    }
+    return { amount: 100, unit: ref.unit ?? 'g', kcal: ref.kcal ?? 0, protein: ref.protein ?? 0, carbs: ref.carbs ?? 0, fat: ref.fat ?? 0 };
+}
+
+export function foodLabel(ref, tx) {
+    const known = ref.foodId ? foodById(ref.foodId) : null;
+    return known ? tx(known.name) : ref.name;
+}
+
+export function portionOf(ref, amount) {
+    const base = foodBase(ref);
+    const ratio = amount / base.amount;
+    return { kcal: base.kcal * ratio, protein: base.protein * ratio, carbs: base.carbs * ratio, fat: base.fat * ratio };
+}
+
+export function plannedTotals(entries) {
+    return entries.reduce((sum, entry) => {
+        const portion = portionOf(entry, entry.amount);
+        return { kcal: sum.kcal + portion.kcal, protein: sum.protein + portion.protein, carbs: sum.carbs + portion.carbs, fat: sum.fat + portion.fat };
+    }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+}
+
+export function reservedOf(entries, fridgeId, todayKey) {
+    return entries
+        .filter((entry) => entry.fridgeId === fridgeId && !entry.done && entry.date >= todayKey)
+        .reduce((sum, entry) => sum + entry.amount, 0);
+}
+
+export function fridgeLeft(item, entries, todayKey) {
+    return Math.round((item.amount - reservedOf(entries, item.id, todayKey)) * 10) / 10;
+}
+
+export function splitSuggestion(left, parts) {
+    if (parts === 1) {
+        return left;
+    }
+    return Math.min(Math.max(roundTo(left / parts, 5), 0), left);
+}
+
+export function foodRefOf(item) {
+    if (item.foodId) {
+        return { foodId: item.foodId };
+    }
+    return { name: item.name, unit: item.unit ?? 'g', kcal: item.kcal ?? 0, protein: item.protein ?? 0, carbs: item.carbs ?? 0, fat: item.fat ?? 0 };
+}
+
+export function mealFromPlan(entry, mealId) {
+    const base = foodBase(entry);
+    const meal = {
+        id: mealId,
+        slot: entry.slot,
+        qty: Math.round((entry.amount / base.amount) * 10000) / 10000,
+        kcal: base.kcal,
+        protein: base.protein,
+        carbs: base.carbs,
+        fat: base.fat,
+    };
+    return entry.foodId ? { ...meal, foodId: entry.foodId } : { ...meal, name: entry.name, amount: base.amount, unit: base.unit };
+}
+
+export function sameFood(a, b) {
+    return a.foodId ? a.foodId === b.foodId : !b.foodId && a.name?.trim().toLowerCase() === b.name?.trim().toLowerCase() && (a.unit ?? 'g') === (b.unit ?? 'g');
+}
+
+export function shoppingItems(entries, todayKey, tx) {
+    const groups = new Map();
+    entries.filter((entry) => entry.toBuy && !entry.done && entry.date >= todayKey).forEach((entry) => {
+        const unit = foodBase(entry).unit;
+        const key = `${entry.foodId ?? entry.name}|${unit}`;
+        const current = groups.get(key) ?? { key, label: foodLabel(entry, tx), unit, amount: 0, firstDate: entry.date };
+        groups.set(key, { ...current, amount: current.amount + entry.amount, firstDate: entry.date < current.firstDate ? entry.date : current.firstDate });
+    });
+    return [...groups.values()].sort((a, b) => a.firstDate.localeCompare(b.firstDate));
+}

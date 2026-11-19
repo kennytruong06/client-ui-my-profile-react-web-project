@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { todayKey } from '@/lib/date';
 import { DEFAULT_TOPICS, ENGLISH_SKILLS, EXAMS } from '@/data/english';
 import { fromCsv, toCsv } from '@/lib/csv';
-import { emptyProfile } from '@/lib/nutrition';
+import { emptyProfile, mealFromPlan, sameFood } from '@/lib/nutrition';
 import journalCsv from '@/data/journal/journal.csv?raw';
 
 const LEGACY_STORAGE_KEY = 'kp.journal.v1';
@@ -23,7 +23,7 @@ function emptyState() {
 }
 
 export function emptyNutrition() {
-    return { profile: null, weights: {}, days: {} };
+    return { profile: null, weights: {}, days: {}, fridge: [], plan: [], menus: {} };
 }
 
 function normalize(parsed) {
@@ -317,6 +317,83 @@ export function setNutritionDay(date, patch) {
     withNutritionDay(date, (day) => ({ ...day, ...patch }));
 }
 
+function commitNutrition(update) {
+    commit({ ...state, nutrition: update(state.nutrition) });
+}
+
+export function addFridgeItem(item) {
+    commitNutrition((nutrition) => {
+        const existing = nutrition.fridge.find((candidate) => sameFood(candidate, item));
+        if (existing) {
+            const fridge = nutrition.fridge.map((candidate) => (candidate.id === existing.id ? { ...candidate, amount: candidate.amount + item.amount } : candidate));
+            return { ...nutrition, fridge };
+        }
+        return { ...nutrition, fridge: [...nutrition.fridge, { ...item, id: newId() }] };
+    });
+}
+
+export function updateFridgeItem(id, patch) {
+    commitNutrition((nutrition) => ({ ...nutrition, fridge: nutrition.fridge.map((item) => (item.id === id ? { ...item, ...patch } : item)) }));
+}
+
+export function removeFridgeItem(id) {
+    commitNutrition((nutrition) => ({
+        ...nutrition,
+        fridge: nutrition.fridge.filter((item) => item.id !== id),
+        plan: nutrition.plan.filter((entry) => entry.fridgeId !== id || entry.done),
+    }));
+}
+
+export function setMenu(date, slot, patch) {
+    commitNutrition((nutrition) => {
+        const key = `${date}|${slot}`;
+        const next = { ...nutrition.menus[key], ...patch };
+        const menus = { ...nutrition.menus };
+        if (!next.title && !next.time && !next.note) {
+            delete menus[key];
+        } else {
+            menus[key] = next;
+        }
+        return { ...nutrition, menus };
+    });
+}
+
+export function addPlanEntry(entry) {
+    commitNutrition((nutrition) => ({ ...nutrition, plan: [...nutrition.plan, { done: false, mealId: null, ...entry, id: newId() }] }));
+}
+
+export function updatePlanEntry(id, patch) {
+    commitNutrition((nutrition) => ({ ...nutrition, plan: nutrition.plan.map((entry) => (entry.id === id && !entry.done ? { ...entry, ...patch } : entry)) }));
+}
+
+export function removePlanEntry(id) {
+    commitNutrition((nutrition) => ({ ...nutrition, plan: nutrition.plan.filter((entry) => entry.id !== id || entry.done) }));
+}
+
+function applyPlanDone(nutrition, entryId, done) {
+    const entry = nutrition.plan.find((candidate) => candidate.id === entryId);
+    if (!entry || entry.done === done || (done && entry.date > todayKey())) {
+        return nutrition;
+    }
+    const delta = done ? -entry.amount : entry.amount;
+    const fridge = nutrition.fridge.map((item) => (item.id === entry.fridgeId ? { ...item, amount: Math.max(Math.round((item.amount + delta) * 10) / 10, 0) } : item));
+    const days = { ...nutrition.days };
+    const day = days[entry.date] ?? { meals: [], burn: 0, note: '' };
+    const mealId = done ? newId() : null;
+    const meals = done ? [...day.meals, mealFromPlan(entry, mealId)] : day.meals.filter((meal) => meal.id !== entry.mealId);
+    if (meals.length === 0 && !day.burn && !day.note) {
+        delete days[entry.date];
+    } else {
+        days[entry.date] = { ...day, meals };
+    }
+    const plan = nutrition.plan.map((candidate) => (candidate.id === entryId ? { ...candidate, done, mealId } : candidate));
+    return { ...nutrition, fridge, days, plan };
+}
+
+export function setPlanDone(entryIds, done) {
+    commitNutrition((nutrition) => entryIds.reduce((current, entryId) => applyPlanDone(current, entryId, done), nutrition));
+}
+
 export function resetJournal() {
     commit(emptyState());
 }
@@ -406,6 +483,15 @@ export function journalToRows(journal) {
         }
         day.meals.forEach((meal) => rows.push({ type: 'meal', date, key: meal.id, text: JSON.stringify(meal) }));
     });
+    journal.nutrition.fridge.forEach((item) => rows.push({ type: 'fridge-item', key: item.id, text: JSON.stringify(item) }));
+    Object.entries(journal.nutrition.menus ?? {}).sort(([a], [b]) => a.localeCompare(b)).forEach(([key, menu]) => {
+        const [date, slot] = key.split('|');
+        rows.push({ type: 'meal-menu', date, key: slot, text: JSON.stringify(menu) });
+    });
+    [...journal.nutrition.plan].sort((a, b) => a.date.localeCompare(b.date)).forEach((entry) => {
+        const { date, ...rest } = entry;
+        rows.push({ type: 'meal-plan', date, key: entry.id, status: entry.done ? 'done' : '', text: JSON.stringify(rest) });
+    });
 
     journal.vocab.topics.forEach((topic) => rows.push({ type: 'vocab-topic', key: topic.id, text: topic.name }));
     journal.vocab.words.forEach((word) => rows.push({ type: 'vocab-word', key: word.id, text: JSON.stringify(word) }));
@@ -461,6 +547,12 @@ function rowsToJournal(rows) {
         } else if (row.type === 'meal') {
             const day = journal.nutrition.days[row.date] ?? { meals: [], burn: 0, note: '' };
             journal.nutrition.days[row.date] = { ...day, meals: [...day.meals, JSON.parse(row.text)] };
+        } else if (row.type === 'fridge-item') {
+            journal.nutrition.fridge = [...journal.nutrition.fridge, JSON.parse(row.text)];
+        } else if (row.type === 'meal-menu') {
+            journal.nutrition.menus = { ...journal.nutrition.menus, [`${row.date}|${row.key}`]: JSON.parse(row.text) };
+        } else if (row.type === 'meal-plan') {
+            journal.nutrition.plan = [...journal.nutrition.plan, { ...JSON.parse(row.text), date: row.date }];
         } else if (row.type === 'vocab-topic') {
             topics.push({ id: row.key, name: row.text });
         } else if (row.type === 'vocab-word') {
