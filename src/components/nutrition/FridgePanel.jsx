@@ -7,7 +7,7 @@ import { FOODS } from '@/data/foods';
 import { JOURNAL_EDITABLE, addFridgeItem, removeFridgeItem, updateFridgeItem } from '@/store/journalStore';
 import { foodBase, foodLabel, fridgeLeft, portionOf } from '@/lib/nutrition';
 
-const EMPTY_CUSTOM = { name: '', amount: '', unit: 'g', kcal: '', protein: '', carbs: '', fat: '' };
+const EMPTY_CUSTOM = { name: '', amount: '', unit: 'g', kcal: '', protein: '', carbs: '', fat: '', fiber: '' };
 
 function fold(text) {
     return text.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').toLowerCase();
@@ -81,6 +81,7 @@ function AddFood() {
             protein: Number(custom.protein) || 0,
             carbs: Number(custom.carbs) || 0,
             fat: Number(custom.fat) || 0,
+            fiber: Number(custom.fiber) || 0,
         });
         setCustom(EMPTY_CUSTOM);
     };
@@ -125,7 +126,7 @@ function AddFood() {
                         <option value="g">g</option>
                         <option value="ml">ml</option>
                     </select>
-                    {['kcal', 'protein', 'carbs', 'fat'].map((field) => (
+                    {['kcal', 'protein', 'carbs', 'fat', 'fiber'].map((field) => (
                         <input
                             key={field}
                             type="number"
@@ -137,7 +138,7 @@ function AddFood() {
                             className="field"
                         />
                     ))}
-                    <button type="button" disabled={!customValid} onClick={addCustom} className="col-span-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-ink-950 transition hover:bg-brand-400 disabled:opacity-40">
+                    <button type="button" disabled={!customValid} onClick={addCustom} className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-ink-950 transition hover:bg-brand-400 disabled:opacity-40">
                         {t('nutrition.fridge.add')}
                     </button>
                 </div>

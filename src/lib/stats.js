@@ -1,26 +1,55 @@
-import { CATEGORIES, isTimed, tasksForWeekday } from '@/data/schedule';
+import { CATEGORIES, isTimed, tasksForDate } from '@/data/schedule';
 import { ROADMAP_LENGTH } from '@/data/ieltsRoadmap';
 import { addDays, rangeKeys, weekdayOf } from '@/lib/date';
 
 export const STREAK_THRESHOLD = 0.5;
 export const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 200, 365];
 
+export function taskUnits(task, record) {
+    if (!task.slots) {
+        return { total: 1, done: record?.status === 'done' ? 1 : 0 };
+    }
+    if (record?.status === 'done') {
+        return { total: task.slots.length, done: task.slots.length };
+    }
+    const minutes = record?.minutes ?? 0;
+    const reached = task.slots.reduce(
+        (progress, slot) => {
+            const upTo = progress.upTo + slot;
+            return { upTo, count: progress.count + (minutes >= upTo ? 1 : 0) };
+        },
+        { upTo: 0, count: 0 },
+    );
+    return { total: task.slots.length, done: reached.count };
+}
+
+export function unitsOf(tasks, records) {
+    return tasks.reduce(
+        (sum, task) => {
+            const units = taskUnits(task, records[task.id]);
+            return { total: sum.total + units.total, done: sum.done + units.done };
+        },
+        { total: 0, done: 0 },
+    );
+}
+
 export function dayStatus(journal, key) {
-    const tasks = tasksForWeekday(weekdayOf(key));
+    const tasks = tasksForDate(key);
     const records = journal.days[key]?.tasks ?? {};
     const mandatory = tasks.filter((task) => task.mandatory);
-    const mandatoryDone = mandatory.filter((task) => records[task.id]?.status === 'done').length;
+    const mandatoryUnits = unitsOf(mandatory, records);
+    const mandatoryDone = mandatoryUnits.done;
     const optional = tasks.filter((task) => !task.mandatory);
     const optionalDone = optional.filter((task) => records[task.id]?.status === 'done').length;
-    const keepTarget = Math.ceil(mandatory.length * STREAK_THRESHOLD);
+    const keepTarget = Math.ceil(mandatoryUnits.total * STREAK_THRESHOLD);
     return {
         tasks,
         records,
-        mandatoryTotal: mandatory.length,
+        mandatoryTotal: mandatoryUnits.total,
         mandatoryDone,
         optionalTotal: optional.length,
         optionalDone,
-        ratio: mandatory.length ? mandatoryDone / mandatory.length : 1,
+        ratio: mandatoryUnits.total ? mandatoryDone / mandatoryUnits.total : 1,
         keepTarget,
         kept: mandatoryDone >= keepTarget,
     };
@@ -77,17 +106,17 @@ export function categoryDayState(journal, key, category) {
     if (key < journal.trackingStart) {
         return { state: 'none', done: 0, need: 0, total: 0 };
     }
-    const tasks = tasksForWeekday(weekdayOf(key)).filter((task) => task.category === category);
+    const tasks = tasksForDate(key).filter((task) => task.category === category);
     const records = journal.days[key]?.tasks ?? {};
     const mandatory = tasks.filter((task) => task.mandatory);
-    const done = mandatory.filter((task) => records[task.id]?.status === 'done').length;
-    const need = Math.ceil(mandatory.length * STREAK_THRESHOLD);
+    const units = unitsOf(mandatory, records);
+    const need = Math.ceil(units.total * STREAK_THRESHOLD);
     const anyDone = tasks.some((task) => records[task.id]?.status === 'done');
-    let state = done >= need ? 'kept' : 'broken';
+    let state = units.done >= need ? 'kept' : 'broken';
     if (mandatory.length === 0) {
         state = anyDone ? 'kept' : 'rest';
     }
-    return { state, done, need, total: mandatory.length };
+    return { state, done: units.done, need, total: units.total };
 }
 
 export function habitStreak(stateOf, journal, today) {
@@ -150,7 +179,8 @@ export function computeStats(journal, rangeStart, today) {
         tasks.forEach((task) => {
             const record = records[task.id];
             const status = record?.status ?? null;
-            if (isToday && !status) {
+            const units = taskUnits(task, record);
+            if (isToday && !status && units.done === 0) {
                 return;
             }
 
@@ -159,18 +189,30 @@ export function computeStats(journal, rangeStart, today) {
             }
 
             const bucket = byCategory[task.category];
-            const actualMinutes = record?.minutes ?? task.minutes;
+            const actualMinutes = task.sessions ? (record?.minutes ?? 0) : (record?.minutes ?? task.minutes);
             const alternative = Boolean(task.allowAlternative) && record?.variant === 'alternative' && status === 'done';
             const timed = isTimed(task) || alternative;
-            if (status === 'done' && timed) {
+            if (task.sessions) {
                 bucket.minutes += actualMinutes;
-            }
-            if (timed && (task.mandatory || status === 'done')) {
-                bucket.targetMinutes += task.minutes;
-                totals.targetMinutes += task.minutes;
+                totals.actualMinutes += actualMinutes;
+                if (task.mandatory) {
+                    bucket.targetMinutes += task.minutes;
+                    totals.targetMinutes += task.minutes;
+                }
                 if (status === 'done') {
                     bucket.timedDone += 1;
-                    totals.actualMinutes += actualMinutes;
+                }
+            } else if (timed) {
+                if (status === 'done') {
+                    bucket.minutes += actualMinutes;
+                }
+                if (task.mandatory || status === 'done') {
+                    bucket.targetMinutes += task.minutes;
+                    totals.targetMinutes += task.minutes;
+                    if (status === 'done') {
+                        bucket.timedDone += 1;
+                        totals.actualMinutes += actualMinutes;
+                    }
                 }
             }
 
@@ -182,18 +224,18 @@ export function computeStats(journal, rangeStart, today) {
                 return;
             }
 
-            totals.mandatoryPlanned += 1;
-            byCategory[task.category].planned += 1;
-            byWeekday[weekday].planned += 1;
-
-            if (status === 'done') {
-                totals.mandatoryDone += 1;
-                byCategory[task.category].done += 1;
-                byWeekday[weekday].done += 1;
-            } else if (status === 'skipped') {
-                totals.mandatorySkipped += 1;
+            const planned = isToday && !status ? units.done : units.total;
+            const remaining = planned - units.done;
+            totals.mandatoryPlanned += planned;
+            byCategory[task.category].planned += planned;
+            byWeekday[weekday].planned += planned;
+            totals.mandatoryDone += units.done;
+            byCategory[task.category].done += units.done;
+            byWeekday[weekday].done += units.done;
+            if (status === 'skipped') {
+                totals.mandatorySkipped += remaining;
             } else {
-                totals.mandatoryMissed += 1;
+                totals.mandatoryMissed += remaining;
             }
         });
     });

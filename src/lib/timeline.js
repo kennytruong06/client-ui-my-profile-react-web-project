@@ -1,5 +1,5 @@
-import { BEDTIME, WAKE_TIME, WORK_HOURS, mealsForWeekday, tasksForWeekday } from '@/data/schedule';
-import { minutesOfDay } from '@/lib/date';
+import { BEDTIME, WAKE_TIME, WORK_HOURS, mealsForWeekday, tasksForDate } from '@/data/schedule';
+import { minutesOfDay, weekdayOf } from '@/lib/date';
 
 export const DAY_START = minutesOfDay(WAKE_TIME);
 export const DAY_END = minutesOfDay(BEDTIME);
@@ -35,7 +35,8 @@ function assignLanes(blocks) {
     return result;
 }
 
-export function blocksForWeekday(weekday) {
+export function blocksForDate(date) {
+    const weekday = weekdayOf(date);
     const blocks = [];
 
     if (WORK_HOURS.days.includes(weekday)) {
@@ -48,7 +49,7 @@ export function blocksForWeekday(weekday) {
         blocks.push({ id: `meal-${meal.id}`, kind: 'meal', meal: meal.id, start: minutesOfDay(meal.start), minutes: meal.minutes });
     });
 
-    tasksForWeekday(weekday).forEach((task) => {
+    tasksForDate(date).filter((task) => !task.flexible).forEach((task) => {
         blocks.push({ id: task.id, kind: 'task', task, start: minutesOfDay(task.start), minutes: task.minutes });
     });
 

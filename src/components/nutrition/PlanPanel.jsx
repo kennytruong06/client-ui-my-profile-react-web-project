@@ -6,7 +6,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { FOODS, MEAL_SLOTS } from '@/data/foods';
 import { JOURNAL_EDITABLE, addPlanEntry, removePlanEntry, setMenu, setPlanDone, updatePlanEntry } from '@/store/journalStore';
 import { addDays, formatLongDate, weekdayOf } from '@/lib/date';
-import { dayTotals, foodBase, foodLabel, foodRefOf, fridgeLeft, plannedTotals, portionOf, shoppingItems, splitSuggestion } from '@/lib/nutrition';
+import { dayTotals, foodBase, foodLabel, foodRefOf, fridgeLeft, plannedTotals, planForDate, portionOf, shoppingItems, splitSuggestion } from '@/lib/nutrition';
 
 const STRIP_RADIUS = 3;
 const MAIN_SLOTS = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -385,15 +385,16 @@ function AddToPlan({ nutrition, date, today }) {
     );
 }
 
-export default function PlanPanel({ nutrition, plan, today }) {
+export default function PlanPanel({ nutrition, today }) {
     const { t } = useI18n();
     const locked = !JOURNAL_EDITABLE;
     const [date, setDate] = useState(today);
+    const plan = planForDate(nutrition, date);
 
     const entries = useMemo(() => nutrition.plan.filter((entry) => entry.date === date), [nutrition.plan, date]);
     const eaten = dayTotals(nutrition.days[date]);
     const pending = plannedTotals(entries.filter((entry) => !entry.done));
-    const totals = { kcal: eaten.kcal + pending.kcal, protein: eaten.protein + pending.protein, carbs: eaten.carbs + pending.carbs, fat: eaten.fat + pending.fat };
+    const totals = { kcal: eaten.kcal + pending.kcal, protein: eaten.protein + pending.protein, carbs: eaten.carbs + pending.carbs, fat: eaten.fat + pending.fat, fiber: eaten.fiber + pending.fiber };
     const ratio = plan.target ? Math.min(totals.kcal / plan.target, 1) : 0;
     const over = totals.kcal > plan.target;
     const visibleSlots = MEAL_SLOTS.filter((slot) => MAIN_SLOTS.includes(slot) || entries.some((entry) => entry.slot === slot));
@@ -425,7 +426,7 @@ export default function PlanPanel({ nutrition, plan, today }) {
                 </div>
                 <p className="mt-2 font-mono text-xs text-muted">{t('nutrition.menu.totalSplit', { eaten: Math.round(eaten.kcal), planned: Math.round(pending.kcal) })}</p>
                 <p className="mt-1 font-mono text-xs text-muted">
-                    {t('nutrition.plan.protein')} {Math.round(totals.protein)}/{plan.protein} g · {t('nutrition.plan.carbs')} {Math.round(totals.carbs)}/{plan.carbs} g · {t('nutrition.plan.fat')} {Math.round(totals.fat)}/{plan.fat} g
+                    {t('nutrition.plan.protein')} {Math.round(totals.protein)}/{plan.protein} g · {t('nutrition.plan.carbs')} {Math.round(totals.carbs)}/{plan.carbs} g · {t('nutrition.plan.fat')} {Math.round(totals.fat)}/{plan.fat} g · {t('nutrition.plan.fiber')} {Math.round(totals.fiber)}/{plan.fiber} g
                 </p>
             </div>
 

@@ -13,7 +13,7 @@ const ALTERNATIVE = 'alternative';
 const STEP_MINUTES = 15;
 const MAX_MINUTES = 600;
 
-function StatusBadge({ status, progress }) {
+export function StatusBadge({ status, progress }) {
     const { t } = useI18n();
     if (status === 'done') {
         return <span className="rounded-full bg-brand-500/15 px-2.5 py-0.5 text-xs font-semibold text-brand-300">{t('common.done')}</span>;
@@ -211,7 +211,7 @@ function VariantPicker({ date, task, record, locked }) {
     );
 }
 
-function OutcomeEditor({ date, task, record, locked }) {
+export function OutcomeEditor({ date, task, record, locked }) {
     const { t } = useI18n();
     const skipped = record.status === 'skipped';
     const missingReason = skipped && !record.note.trim();

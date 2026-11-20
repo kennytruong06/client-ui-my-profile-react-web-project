@@ -2,7 +2,7 @@ import { createPortal } from 'react-dom';
 import { useI18n } from '@/i18n/I18nProvider';
 import { MEAL_SLOTS } from '@/data/foods';
 import { formatLongDate } from '@/lib/date';
-import { dayTotals, mealBase, mealName, verdictOf } from '@/lib/nutrition';
+import { dayTotals, mealBase, mealFiber, mealName, verdictOf } from '@/lib/nutrition';
 
 const round1 = (value) => Math.round(value * 10) / 10;
 
@@ -26,6 +26,7 @@ export default function DayReport({ nutrition, plan, date }) {
         { key: 'protein', eaten: totals.protein, target: plan.protein },
         { key: 'carbs', eaten: totals.carbs, target: plan.carbs },
         { key: 'fat', eaten: totals.fat, target: plan.fat },
+        { key: 'fiber', eaten: totals.fiber, target: plan.fiber },
     ];
 
     return createPortal(
@@ -82,6 +83,7 @@ export default function DayReport({ nutrition, plan, date }) {
                             <th className="py-1.5 text-right font-semibold">{t('nutrition.plan.protein')}</th>
                             <th className="py-1.5 text-right font-semibold">{t('nutrition.plan.carbs')}</th>
                             <th className="py-1.5 text-right font-semibold">{t('nutrition.plan.fat')}</th>
+                            <th className="py-1.5 text-right font-semibold">{t('nutrition.plan.fiber')}</th>
                         </tr>
                     </thead>
                     {MEAL_SLOTS.map((slot) => {
@@ -95,7 +97,7 @@ export default function DayReport({ nutrition, plan, date }) {
                                 <tr className="bg-gray-100 [print-color-adjust:exact]">
                                     <td colSpan={2} className="px-2 py-1 text-xs font-semibold uppercase tracking-wider">{t(`nutrition.slots.${slot}`)}</td>
                                     <td className="py-1 text-right font-mono text-xs font-semibold">{Math.round(subtotal)}</td>
-                                    <td colSpan={3} />
+                                    <td colSpan={4} />
                                 </tr>
                                 {meals.map((meal) => {
                                     const base = mealBase(meal);
@@ -107,6 +109,7 @@ export default function DayReport({ nutrition, plan, date }) {
                                             <td className="py-1.5 text-right font-mono text-xs">{round1((meal.protein ?? 0) * meal.qty)}</td>
                                             <td className="py-1.5 text-right font-mono text-xs">{round1((meal.carbs ?? 0) * meal.qty)}</td>
                                             <td className="py-1.5 text-right font-mono text-xs">{round1((meal.fat ?? 0) * meal.qty)}</td>
+                                            <td className="py-1.5 text-right font-mono text-xs">{round1(mealFiber(meal) * meal.qty)}</td>
                                         </tr>
                                     );
                                 })}
@@ -120,6 +123,7 @@ export default function DayReport({ nutrition, plan, date }) {
                             <td className="py-2 text-right font-mono text-xs">{round1(totals.protein)}</td>
                             <td className="py-2 text-right font-mono text-xs">{round1(totals.carbs)}</td>
                             <td className="py-2 text-right font-mono text-xs">{round1(totals.fat)}</td>
+                            <td className="py-2 text-right font-mono text-xs">{round1(totals.fiber)}</td>
                         </tr>
                     </tfoot>
                 </table>

@@ -1,4 +1,8 @@
+import { weekdayOf } from '@/lib/date';
+
 export const CATEGORIES = ['exercise', 'english', 'skincare', 'guitar', 'piano'];
+
+export const SESSION_LOG_FROM = '2026-11-20';
 
 export const SKINCARE_STEPS = [
     { id: 'remover', label: { en: 'Makeup remover', vi: 'Tẩy trang' } },
@@ -258,7 +262,7 @@ const SUNDAY = [
     skincareNight('22:15'),
 ];
 
-export const WEEK_TEMPLATE = {
+const LEGACY_WEEK_TEMPLATE = {
     0: SUNDAY,
     1: WORKDAY_FULL,
     2: MUSIC_DAY,
@@ -267,6 +271,55 @@ export const WEEK_TEMPLATE = {
     5: WORKDAY_FULL,
     6: SATURDAY,
 };
+
+const SESSION_LOGS = [
+    {
+        id: 'english-study',
+        category: 'english',
+        kind: 'study',
+        roadmap: true,
+        title: { en: 'English study', vi: 'Học tiếng Anh' },
+        details: {
+            en: 'Study at any time of day. Log each session with its topic until you reach the daily total.',
+            vi: 'Học vào giờ nào cũng được. Ghi từng buổi học kèm mục đã học cho đến khi đủ số giờ trong ngày.',
+        },
+    },
+    {
+        id: 'exercise-log',
+        category: 'exercise',
+        kind: 'exercise',
+        title: { en: 'Exercise', vi: 'Thể dục' },
+        details: {
+            en: 'Train at any time of day. Log each exercise with its reps, minutes or km until you reach the daily time.',
+            vi: 'Tập lúc nào cũng được. Ghi từng bài kèm số cái, số phút hoặc số km cho đến khi đủ thời gian vận động trong ngày.',
+        },
+    },
+];
+
+function withSessionLogs(tasks) {
+    return SESSION_LOGS.reduce((list, log) => {
+        const own = list.filter((task) => task.category === log.category);
+        if (own.length === 0) {
+            return list;
+        }
+        const flexible = {
+            id: log.id,
+            category: log.category,
+            mandatory: own.some((task) => task.mandatory),
+            flexible: true,
+            sessions: log.kind,
+            roadmap: log.roadmap,
+            slots: own.filter((task) => task.mandatory).map((task) => task.minutes),
+            minutes: own.reduce((sum, task) => sum + task.minutes, 0),
+            title: log.title,
+            details: log.details,
+        };
+        const index = list.findIndex((task) => task.category === log.category);
+        return [...list.slice(0, index), flexible, ...list.slice(index).filter((task) => task.category !== log.category)];
+    }, tasks);
+}
+
+export const WEEK_TEMPLATE = Object.fromEntries(Object.entries(LEGACY_WEEK_TEMPLATE).map(([weekday, tasks]) => [weekday, withSessionLogs(tasks)]));
 
 export const WAKE_TIME = '05:00';
 export const BEDTIME = '23:00';
@@ -320,4 +373,9 @@ export function isTimed(task) {
 
 export function tasksForWeekday(weekday) {
     return WEEK_TEMPLATE[weekday] ?? [];
+}
+
+export function tasksForDate(key) {
+    const template = key < SESSION_LOG_FROM ? LEGACY_WEEK_TEMPLATE : WEEK_TEMPLATE;
+    return template[weekdayOf(key)] ?? [];
 }

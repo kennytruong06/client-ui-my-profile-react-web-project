@@ -51,7 +51,7 @@ function AddFood({ date, nutrition }) {
     const { t, tx } = useI18n();
     const [slot, setSlot] = useState(defaultSlot);
     const [query, setQuery] = useState('');
-    const [custom, setCustom] = useState({ name: '', amount: '', kcal: '', protein: '', carbs: '', fat: '' });
+    const [custom, setCustom] = useState({ name: '', amount: '', kcal: '', protein: '', carbs: '', fat: '', fiber: '' });
 
     const mine = useMemo(() => {
         const seen = new Map();
@@ -78,7 +78,7 @@ function AddFood({ date, nutrition }) {
             addMeal(date, { slot, foodId: food.id, kcal: food.kcal, protein: food.protein, carbs: food.carbs, fat: food.fat });
         } else {
             const { meal } = item;
-            addMeal(date, { slot, name: meal.name, amount: meal.amount, unit: meal.unit, kcal: meal.kcal, protein: meal.protein, carbs: meal.carbs, fat: meal.fat });
+            addMeal(date, { slot, name: meal.name, amount: meal.amount, unit: meal.unit, kcal: meal.kcal, protein: meal.protein, carbs: meal.carbs, fat: meal.fat, fiber: meal.fiber });
         }
     };
 
@@ -93,8 +93,9 @@ function AddFood({ date, nutrition }) {
             protein: Number(custom.protein) || 0,
             carbs: Number(custom.carbs) || 0,
             fat: Number(custom.fat) || 0,
+            fiber: Number(custom.fiber) || 0,
         });
-        setCustom({ name: '', amount: '', kcal: '', protein: '', carbs: '', fat: '' });
+        setCustom({ name: '', amount: '', kcal: '', protein: '', carbs: '', fat: '', fiber: '' });
     };
 
     return (
@@ -140,7 +141,7 @@ function AddFood({ date, nutrition }) {
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-6">
                     <input value={custom.name} onChange={(event) => setCustom({ ...custom, name: event.target.value })} placeholder={t('nutrition.day.customName')} className="field col-span-2 sm:col-span-4" />
                     <input type="number" inputMode="decimal" min="0" value={custom.amount} onChange={(event) => setCustom({ ...custom, amount: event.target.value })} placeholder={t('nutrition.day.customAmount')} className="field col-span-2" />
-                    {['kcal', 'protein', 'carbs', 'fat'].map((field) => (
+                    {['kcal', 'protein', 'carbs', 'fat', 'fiber'].map((field) => (
                         <input
                             key={field}
                             type="number"
@@ -152,7 +153,7 @@ function AddFood({ date, nutrition }) {
                             className="field"
                         />
                     ))}
-                    <button type="button" disabled={!customValid} onClick={addCustom} className="col-span-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-ink-950 transition hover:bg-brand-400 disabled:opacity-40">
+                    <button type="button" disabled={!customValid} onClick={addCustom} className="col-span-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-ink-950 transition hover:bg-brand-400 disabled:opacity-40 sm:col-span-1">
                         {t('nutrition.day.addCustom')}
                     </button>
                 </div>
@@ -231,10 +232,11 @@ export default function DayLog({ nutrition, plan, date }) {
                         )}
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <MacroBar label={t('nutrition.plan.protein')} value={totals.protein} target={plan.protein} />
                         <MacroBar label={t('nutrition.plan.carbs')} value={totals.carbs} target={plan.carbs} />
                         <MacroBar label={t('nutrition.plan.fat')} value={totals.fat} target={plan.fat} />
+                        <MacroBar label={t('nutrition.plan.fiber')} value={totals.fiber} target={plan.fiber} />
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">

@@ -3,7 +3,7 @@ import { LuBookOpen, LuFlame, LuSalad, LuSparkles } from 'react-icons/lu';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { useI18n } from '@/i18n/I18nProvider';
 import { categoryDayState, habitDays, habitStreak } from '@/lib/stats';
-import { EATING_FLOOR, currentWeightKg, eatingStateFn, planOf, profileReady } from '@/lib/nutrition';
+import { EATING_FLOOR, eatingStateFn, planForDate } from '@/lib/nutrition';
 import { fromKey } from '@/lib/date';
 
 const DAYS_SHOWN = 7;
@@ -98,8 +98,8 @@ export default function HabitStreaks({ journal, today }) {
 
     const englishOf = (key) => categoryDayState(journal, key, 'english');
     const skincareOf = (key) => categoryDayState(journal, key, 'skincare');
-    const plan = profileReady(journal.nutrition.profile) ? planOf(journal.nutrition.profile, currentWeightKg(journal.nutrition)) : null;
-    const eatingOf = eatingStateFn(journal.nutrition, plan);
+    const plan = planForDate(journal.nutrition, today);
+    const eatingOf = eatingStateFn(journal.nutrition);
 
     const english = englishOf(today);
     const skincare = skincareOf(today);

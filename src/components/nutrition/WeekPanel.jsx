@@ -16,7 +16,7 @@ function Stat({ label, value, hint, tone = '' }) {
 
 export default function WeekPanel({ nutrition, plan, endDate }) {
     const { t } = useI18n();
-    const summary = weekSummary(nutrition, plan, endDate);
+    const summary = weekSummary(nutrition, endDate);
     const startDate = addDays(endDate, -6);
     const scale = weightChange(nutrition, startDate, endDate);
     const ceiling = Math.max(plan.tdee, plan.target, ...summary.rows.map((row) => row.eaten)) * 1.1;
@@ -38,7 +38,7 @@ export default function WeekPanel({ nutrition, plan, endDate }) {
                     <span className="absolute -top-4 left-0 font-mono text-[10px] text-faint">{t('nutrition.week.tdeeLine', { n: plan.tdee })}</span>
                 </div>
                 {summary.rows.map((row) => {
-                    const over = row.eaten > plan.target;
+                    const over = row.eaten > row.target;
                     return (
                         <div key={row.key} className="group relative flex h-full flex-1 flex-col items-center justify-end gap-1.5" title={row.logged ? `${Math.round(row.eaten)} kcal` : '—'}>
                             <div className="relative w-full flex-1 overflow-hidden rounded-t-md bg-ink-800">

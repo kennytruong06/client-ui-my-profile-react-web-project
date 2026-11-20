@@ -4,6 +4,29 @@ export const CHART_SKILLS = ['listening', 'reading'];
 
 export const EXAMS = ['ielts', 'toeic'];
 
+export const STUDY_TOPIC_GROUPS = ['learn', 'practice', 'review', 'other'];
+
+const topic = (id, group, vi, en) => ({ id, group, label: { vi, en } });
+
+export const STUDY_TOPICS = [
+    topic('theory', 'learn', 'Ôn lý thuyết', 'Review theory'),
+    topic('grammar', 'learn', 'Ngữ pháp', 'Grammar'),
+    topic('vocab-new', 'learn', 'Học từ vựng mới', 'Learn new vocabulary'),
+    topic('vocab-review', 'learn', 'Ôn từ vựng', 'Review vocabulary'),
+    topic('listening-test', 'practice', 'Làm đề Listening', 'Listening test'),
+    topic('reading-test', 'practice', 'Làm đề Reading', 'Reading test'),
+    topic('writing-test', 'practice', 'Làm bài Writing', 'Writing task'),
+    topic('speaking-test', 'practice', 'Làm đề Speaking', 'Speaking test'),
+    topic('toeic-test', 'practice', 'Làm đề TOEIC', 'TOEIC test'),
+    topic('listening-review', 'review', 'Ôn lại Listening', 'Review Listening'),
+    topic('reading-review', 'review', 'Ôn lại Reading', 'Review Reading'),
+    topic('writing-review', 'review', 'Ôn lại Writing', 'Review Writing'),
+    topic('speaking-review', 'review', 'Ôn lại Speaking', 'Review Speaking'),
+    topic('mistakes', 'review', 'Chữa lỗi sai', 'Fix mistakes'),
+    topic('roadmap', 'other', 'Theo lộ trình IELTS', 'Follow the IELTS roadmap'),
+    topic('other', 'other', 'Khác (tự ghi)', 'Other (write it)'),
+];
+
 export const SCORE_RULES = {
     ielts: {
         listening: { max: 40, step: 1 },

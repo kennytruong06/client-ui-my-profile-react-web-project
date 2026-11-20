@@ -12,7 +12,7 @@ import WeekPanel from '@/components/nutrition/WeekPanel';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useJournal } from '@/store/journalStore';
 import { addDays, formatLongDate, todayKey } from '@/lib/date';
-import { currentWeightKg, planOf, profileReady } from '@/lib/nutrition';
+import { planForDate } from '@/lib/nutrition';
 import { printPdf } from '@/lib/printPdf';
 
 const TABS = ['log', 'overview', 'plan'];
@@ -23,8 +23,7 @@ export default function NutritionPage() {
     const today = todayKey();
     const [date, setDate] = useState(today);
     const [tab, setTab] = useState('log');
-    const ready = profileReady(nutrition.profile);
-    const plan = ready ? planOf(nutrition.profile, currentWeightKg(nutrition)) : null;
+    const plan = planForDate(nutrition, date);
     const hasMeals = (nutrition.days[date]?.meals.length ?? 0) > 0;
     const openDay = (key) => {
         setDate(key);
@@ -53,12 +52,12 @@ export default function NutritionPage() {
                 </div>
             )}
 
-            {plan && tab === 'overview' && <OverviewPanel nutrition={nutrition} plan={plan} today={today} onOpenDay={openDay} />}
+            {plan && tab === 'overview' && <OverviewPanel nutrition={nutrition} plan={planForDate(nutrition, today)} today={today} onOpenDay={openDay} />}
 
             {plan && tab === 'plan' && (
                 <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
                     <FridgePanel nutrition={nutrition} today={today} />
-                    <PlanPanel nutrition={nutrition} plan={plan} today={today} />
+                    <PlanPanel nutrition={nutrition} today={today} />
                 </div>
             )}
 

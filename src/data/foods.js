@@ -78,7 +78,9 @@ const AMOUNTS = {
     sugarcane: 300, 'orange-juice': 250, 'avocado-smoothie': 350, 'milk-plain': 180, beer: 330,
 };
 
-export const FOODS = CATALOG.map((item) => ({ ...item, amount: AMOUNTS[item.id], unit: item.group === 'drink' || item.id.startsWith('soup') || item.id === 'canh-chua' ? 'ml' : 'g' }));
+const FIBER = { 'rice-white': 0.6, 'rice-brown': 2.7, 'pho-bo': 1.5, 'bun-bo': 2, 'bun-rieu': 2, 'hu-tieu': 1.5, 'bun-thit-nuong': 3, 'com-tam': 2, 'com-ga': 2, 'mi-goi': 2, 'banh-mi-thit': 2.5, 'banh-mi-trung': 2.5, xoi: 1, oat: 4, 'sweet-potato': 3.9, 'beef-stirfry': 0.5, 'tofu-boiled': 0.9, 'tofu-fried': 1, 'veg-boiled': 2.5, salad: 3, 'soup-veg': 2, 'canh-chua': 1.5, banana: 2.6, apple: 4.3, orange: 3.1, mango: 2.8, 'dragon-fruit': 2.9, watermelon: 0.8, cashew: 1, chips: 1.5, cake: 1, 'fried-chicken': 0.5, 'orange-juice': 0.5, 'avocado-smoothie': 6 };
+
+export const FOODS = CATALOG.map((item) => ({ ...item, fiber: FIBER[item.id] ?? 0, amount: AMOUNTS[item.id], unit: item.group === 'drink' || item.id.startsWith('soup') || item.id === 'canh-chua' ? 'ml' : 'g' }));
 
 export function foodById(id) {
     return FOODS.find((item) => item.id === id) ?? null;

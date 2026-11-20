@@ -8,6 +8,7 @@ import journalCsv from '@/data/journal/journal.csv?raw';
 const LEGACY_STORAGE_KEY = 'kp.journal.v1';
 const API = '/__journal';
 const SAVE_DELAY = 400;
+const EMPTY_TASK = { status: null, note: '', steps: [], stepValues: {}, variant: null, minutes: null, activity: '', sessions: [] };
 
 export const JOURNAL_EDITABLE = import.meta.env.DEV;
 export const JOURNAL_FILE = 'src/data/journal/journal.csv';
@@ -151,16 +152,46 @@ function withDay(date, update) {
 
 export function updateTask(date, taskId, patch) {
     withDay(date, (day) => {
-        const current = { status: null, note: '', steps: [], stepValues: {}, variant: null, minutes: null, activity: '', ...day.tasks[taskId] };
+        const current = { ...EMPTY_TASK, ...day.tasks[taskId] };
         const next = { ...current, ...patch };
         const tasks = { ...day.tasks };
-        if (!next.status && !next.note && next.steps.length === 0 && Object.keys(next.stepValues).length === 0 && !next.variant && next.minutes == null && !next.activity) {
+        if (!next.status && !next.note && next.steps.length === 0 && Object.keys(next.stepValues).length === 0 && !next.variant && next.minutes == null && !next.activity && next.sessions.length === 0) {
             delete tasks[taskId];
         } else {
             tasks[taskId] = next;
         }
         return { ...day, tasks };
     });
+}
+
+export function sessionsMinutes(sessions) {
+    return (sessions ?? []).reduce((sum, session) => sum + (Number(session.minutes) || 0), 0);
+}
+
+function changeSessions(date, task, change) {
+    const day = state.days[date];
+    const sessions = change(day?.tasks[task.id]?.sessions ?? []);
+    const total = sessionsMinutes(sessions);
+    const current = day?.tasks[task.id]?.status ?? null;
+    let status = current;
+    if (total >= task.minutes) {
+        status = 'done';
+    } else if (current === 'done') {
+        status = null;
+    }
+    updateTask(date, task.id, { sessions, status, minutes: total > 0 ? total : null });
+}
+
+export function addSession(date, task, session) {
+    changeSessions(date, task, (sessions) => [...sessions, { note: '', reps: 0, km: 0, ...session, id: newId() }]);
+}
+
+export function updateSession(date, task, sessionId, patch) {
+    changeSessions(date, task, (sessions) => sessions.map((session) => (session.id === sessionId ? { ...session, ...patch } : session)));
+}
+
+export function removeSession(date, task, sessionId) {
+    changeSessions(date, task, (sessions) => sessions.filter((session) => session.id !== sessionId));
 }
 
 export function setDayNote(date, note) {
@@ -444,6 +475,9 @@ export function journalToRows(journal) {
                 minutes: task.minutes ?? '',
                 activity: task.activity ?? '',
             });
+            (task.sessions ?? []).forEach((session) => {
+                rows.push({ type: 'task-session', date, key: `${taskId}.${session.id}`, variant: session.km || '', steps: session.reps || '', text: session.note ?? '', minutes: session.minutes, activity: session.topic });
+            });
         });
     });
 
@@ -518,7 +552,15 @@ function rowsToJournal(rows) {
                 variant: row.variant || null,
                 minutes: row.minutes === undefined || row.minutes === '' ? null : Number(row.minutes),
                 activity: row.activity ?? '',
+                sessions: day.tasks[row.key]?.sessions ?? [],
             };
+            journal.days[row.date] = day;
+        } else if (row.type === 'task-session' || row.type === 'study-session') {
+            const [taskId, sessionId] = row.key.split('.');
+            const day = journal.days[row.date] ?? { tasks: {}, note: '' };
+            const task = { ...EMPTY_TASK, ...day.tasks[taskId] };
+            task.sessions = [...task.sessions, { id: sessionId, topic: row.activity ?? '', minutes: Number(row.minutes) || 0, reps: Number(row.steps) || 0, km: Number(row.variant) || 0, note: row.text ?? '' }];
+            day.tasks[taskId] = task;
             journal.days[row.date] = day;
         } else if (row.type === 'english-day') {
             journal.english.days[row.key] = { ...emptyEnglishLog(), ...journal.english.days[row.key], done: row.status === 'done', date: row.date ?? '', note: row.text };

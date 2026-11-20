@@ -5,11 +5,11 @@ import PageHeader from '@/components/PageHeader';
 import CategoryIcon from '@/components/CategoryIcon';
 import useNow from '@/hooks/useNow';
 import { useI18n } from '@/i18n/I18nProvider';
-import { useJournal } from '@/store/journalStore';
-import { BEDTIME, WAKE_TIME } from '@/data/schedule';
-import { addDays, fromKey, toKey, weekdayOf } from '@/lib/date';
+import { sessionsMinutes, useJournal } from '@/store/journalStore';
+import { BEDTIME, WAKE_TIME, tasksForDate } from '@/data/schedule';
+import { addDays, formatDuration, fromKey, toKey, weekdayOf } from '@/lib/date';
 import { dayStatus } from '@/lib/stats';
-import { DAY_END, DAY_START, blocksForWeekday, formatClock, hourMarks } from '@/lib/timeline';
+import { DAY_END, DAY_START, blocksForDate, formatClock, hourMarks } from '@/lib/timeline';
 
 const WEEK_OFFSETS = [0, 1, 2, 3, 4, 5, 6];
 const PX_PER_MINUTE = { week: 0.85, day: 1.3 };
@@ -83,7 +83,7 @@ function NowLine({ ppm, now }) {
 
 function DayColumn({ date, weekday, ppm, compact, journal, today, now, onOpen }) {
     const { t } = useI18n();
-    const blocks = blocksForWeekday(weekday);
+    const blocks = blocksForDate(date);
     const records = journal.days[date]?.tasks ?? {};
     const reveal = date <= today;
     const isToday = date === today;
@@ -113,6 +113,36 @@ function DayColumn({ date, weekday, ppm, compact, journal, today, now, onOpen })
                 ))}
                 {isToday && <NowLine ppm={ppm} now={now} />}
             </div>
+        </div>
+    );
+}
+
+function FlexibleRow({ dates, journal, today, compact }) {
+    const { t, tx } = useI18n();
+    return (
+        <div className={`mb-2 flex gap-2 ${compact ? 'min-w-[760px]' : ''}`}>
+            <span className="w-11 shrink-0 self-center text-right font-mono text-[10px] text-faint">{t('schedule.anytime')}</span>
+            {dates.map((date) => (
+                <div key={date} className="flex min-w-0 flex-1 flex-col gap-1">
+                    {tasksForDate(date).filter((task) => task.flexible).map((task) => {
+                        const record = journal.days[date]?.tasks[task.id];
+                        const status = date <= today ? record?.status : null;
+                        const total = sessionsMinutes(record?.sessions);
+                        let tone = task.mandatory ? 'border-brand-500/40 bg-brand-500/10 text-white' : 'border-dashed border-brand-500/30 bg-ink-900/70 text-muted';
+                        if (status === 'done') {
+                            tone = 'border-brand-400/60 bg-brand-500/25 text-white';
+                        } else if (status === 'skipped') {
+                            tone = 'border-danger/30 bg-danger/10 text-muted line-through';
+                        }
+                        return (
+                            <div key={task.id} title={`${tx(task.title)} · ${formatDuration(total)} / ${formatDuration(task.minutes)}`} className={`truncate rounded-md border px-1.5 py-1 text-center font-mono text-[10px] ${tone}`}>
+                                <CategoryIcon category={task.category} size={10} className="mr-1 inline" />
+                                {compact ? `${formatDuration(total)}/${formatDuration(task.minutes)}` : `${tx(task.title)} · ${formatDuration(total)} / ${formatDuration(task.minutes)}`}
+                            </div>
+                        );
+                    })}
+                </div>
+            ))}
         </div>
     );
 }
@@ -169,8 +199,9 @@ export default function SchedulePage() {
         setView('day');
     };
 
-    const dayBlocks = blocksForWeekday(weekdayOf(selected));
-    const taskMinutes = dayBlocks.filter((block) => block.kind === 'task' && block.task.mandatory).reduce((sum, block) => sum + block.minutes, 0);
+    const dayBlocks = blocksForDate(selected);
+    const flexibleMinutes = tasksForDate(selected).filter((task) => task.flexible && task.mandatory).reduce((sum, task) => sum + task.minutes, 0);
+    const taskMinutes = flexibleMinutes + dayBlocks.filter((block) => block.kind === 'task' && block.task.mandatory).reduce((sum, block) => sum + block.minutes, 0);
     const workMinutes = dayBlocks.filter((block) => block.kind === 'work').reduce((sum, block) => sum + block.minutes, 0);
     const label = view === 'week'
         ? `${fromKey(monday).getDate()} ${t('monthsShort')[fromKey(monday).getMonth()]} – ${fromKey(addDays(monday, 6)).getDate()} ${t('monthsShort')[fromKey(addDays(monday, 6)).getMonth()]}`
@@ -227,6 +258,7 @@ export default function SchedulePage() {
             </div>
 
             <div className="card overflow-x-auto p-3 sm:p-4">
+                <FlexibleRow dates={view === 'week' ? weekDates : [selected]} journal={journal} today={today} compact={view === 'week'} />
                 <div className={`flex gap-2 ${view === 'week' ? 'min-w-[760px]' : ''}`}>
                     <HourGutter ppm={ppm} offset={view === 'week' ? HEADER_HEIGHT + HEADER_GAP : 0} />
                     {view === 'week' ? (

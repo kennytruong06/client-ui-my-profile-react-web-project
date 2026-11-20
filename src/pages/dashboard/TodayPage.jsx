@@ -8,7 +8,7 @@ import HabitStreaks from '@/components/dashboard/HabitStreaks';
 import CategoryIcon from '@/components/CategoryIcon';
 import useNow from '@/hooks/useNow';
 import { useI18n } from '@/i18n/I18nProvider';
-import { useJournal } from '@/store/journalStore';
+import { sessionsMinutes, useJournal } from '@/store/journalStore';
 import { dayStatus, roadmapDayFor, suggestedRoadmapDay } from '@/lib/stats';
 import { endTime, formatLongDate, minutesOfDay, toKey } from '@/lib/date';
 
@@ -46,9 +46,10 @@ export default function TodayPage() {
     const suggestedDay = suggestedRoadmapDay(journal);
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
-    const nextTask = status.tasks
-        .filter((task) => !status.records[task.id]?.status)
-        .sort((a, b) => Number(minutesOfDay(a.start) + a.minutes < nowMinutes) - Number(minutesOfDay(b.start) + b.minutes < nowMinutes) || minutesOfDay(a.start) - minutesOfDay(b.start))[0];
+    const pending = status.tasks.filter((task) => !status.records[task.id]?.status);
+    const nextTask = pending
+        .filter((task) => !task.flexible)
+        .sort((a, b) => Number(minutesOfDay(a.start) + a.minutes < nowMinutes) - Number(minutesOfDay(b.start) + b.minutes < nowMinutes) || minutesOfDay(a.start) - minutesOfDay(b.start))[0] ?? pending[0];
 
     return (
         <div>
@@ -77,7 +78,11 @@ export default function TodayPage() {
                             </span>
                             <div className="min-w-0">
                                 <p className="truncate font-semibold">{tx(nextTask.title)}</p>
-                                <p className="font-mono text-xs text-muted">{nextTask.start}–{endTime(nextTask.start, nextTask.minutes)}</p>
+                                <p className="font-mono text-xs text-muted">
+                                    {nextTask.flexible
+                                        ? t(`day.${nextTask.sessions}.left`, { n: Math.max(nextTask.minutes - sessionsMinutes(status.records[nextTask.id]?.sessions), 0) })
+                                        : `${nextTask.start}–${endTime(nextTask.start, nextTask.minutes)}`}
+                                </p>
                             </div>
                         </div>
                     ) : (

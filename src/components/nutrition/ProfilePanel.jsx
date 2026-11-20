@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { LuFlame, LuScale, LuTarget, LuTriangleAlert } from 'react-icons/lu';
 import { useI18n } from '@/i18n/I18nProvider';
 import { JOURNAL_EDITABLE, saveProfile } from '@/store/journalStore';
-import { ACTIVITY_LEVELS, LOSS_RATES, currentWeightKg, emptyProfile, planOf, profileReady } from '@/lib/nutrition';
+import { ACTIVITY_LEVELS, LOSS_RATES, currentWeightKg, emptyProfile, planForDate, profileReady } from '@/lib/nutrition';
 import { addDays, formatShortDate, todayKey } from '@/lib/date';
 
 function Field({ label, children }) {
@@ -42,7 +42,7 @@ export default function ProfilePanel({ nutrition }) {
     const locked = !JOURNAL_EDITABLE;
     const ready = profileReady(profile);
     const weight = currentWeightKg(nutrition);
-    const plan = ready ? planOf(profile, weight) : null;
+    const plan = ready ? planForDate({ ...nutrition, profile }, todayKey()) : null;
     const set = (patch) => saveProfile(patch);
 
     return (
@@ -140,6 +140,7 @@ export default function ProfilePanel({ nutrition }) {
                             <Metric label={t('nutrition.plan.protein')} value={plan.protein} unit="g" />
                             <Metric label={t('nutrition.plan.carbs')} value={plan.carbs} unit="g" />
                             <Metric label={t('nutrition.plan.fat')} value={plan.fat} unit="g" />
+                            <Metric label={t('nutrition.plan.fiber')} value={plan.fiber} unit="g" hint={t('nutrition.plan.fiberHint')} />
                         </div>
                         <p className="text-sm text-muted">
                             {Number(profile.goalKg) > 0

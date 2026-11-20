@@ -4,7 +4,7 @@ import { LuCheck, LuChevronDown, LuChevronLeft, LuChevronRight, LuCircleAlert, L
 import { useI18n } from '@/i18n/I18nProvider';
 import { MEAL_SLOTS } from '@/data/foods';
 import { addDays, formatShortDate, fromKey, rangeKeys, toKey, weekdayOf } from '@/lib/date';
-import { dayTotals, eatingStateFn, mealBase, mealName } from '@/lib/nutrition';
+import { dayTotals, eatingStateFn, mealBase, mealName, planForDate } from '@/lib/nutrition';
 
 const MODES = ['week', 'month'];
 
@@ -72,10 +72,10 @@ function MealList({ entry }) {
     );
 }
 
-function DayRow({ row, plan, ceiling, open, onToggle, onOpenDay }) {
+function DayRow({ row, ceiling, open, onToggle, onOpenDay }) {
     const { t } = useI18n();
     const date = fromKey(row.key);
-    const over = row.eaten > plan.target;
+    const over = row.eaten > row.target;
     const state = row.state.state;
     const empty = !row.logged;
 
@@ -102,7 +102,7 @@ function DayRow({ row, plan, ceiling, open, onToggle, onOpenDay }) {
                     <>
                         <div className="w-20 shrink-0 text-right">
                             <p className={`font-mono text-sm ${over ? 'text-danger' : ''}`}>{Math.round(row.eaten)}</p>
-                            <p className="font-mono text-[11px] text-faint">/ {plan.target} kcal</p>
+                            <p className="font-mono text-[11px] text-faint">/ {row.target} kcal</p>
                         </div>
                         <div className="w-16 shrink-0 text-right">
                             <p className={`font-mono text-sm ${row.deficit >= 0 ? 'text-brand-300' : 'text-danger'}`}>{row.deficit > 0 ? '+' : ''}{row.deficit}</p>
@@ -134,9 +134,10 @@ export default function OverviewPanel({ nutrition, plan, today, onOpenDay }) {
     const [openKey, setOpenKey] = useState(null);
 
     const range = useMemo(() => rangeOf(mode, anchor), [mode, anchor]);
-    const stateOf = useMemo(() => eatingStateFn(nutrition, plan), [nutrition, plan]);
+    const stateOf = useMemo(() => eatingStateFn(nutrition), [nutrition]);
     const rows = useMemo(() => rangeKeys(range.start, range.end).map((key) => {
         const entry = nutrition.days[key] ?? { meals: [], burn: 0, note: '' };
+        const dayPlan = planForDate(nutrition, key);
         const logged = entry.meals.length > 0;
         const eaten = dayTotals(entry).kcal;
         return {
@@ -144,12 +145,13 @@ export default function OverviewPanel({ nutrition, plan, today, onOpenDay }) {
             entry,
             logged,
             eaten,
-            deficit: logged ? Math.round(plan.tdee + entry.burn - eaten) : null,
+            target: dayPlan.target,
+            deficit: logged ? Math.round(dayPlan.tdee + entry.burn - eaten) : null,
             future: key > today,
             isToday: key === today,
             state: stateOf(key),
         };
-    }), [range, nutrition.days, plan, stateOf, today]);
+    }), [range, nutrition, stateOf, today]);
 
     const logged = rows.filter((row) => row.logged);
     const counted = rows.filter((row) => row.key <= today).length;
@@ -157,7 +159,7 @@ export default function OverviewPanel({ nutrition, plan, today, onOpenDay }) {
     const average = logged.length ? Math.round(logged.reduce((sum, row) => sum + row.eaten, 0) / logged.length) : null;
     const finished = logged.filter((row) => !row.isToday);
     const kept = finished.filter((row) => row.state.state === 'kept').length;
-    const ceiling = Math.max(plan.target, ...rows.map((row) => row.eaten)) * 1.05;
+    const ceiling = Math.max(plan.target, ...rows.map((row) => row.target), ...rows.map((row) => row.eaten)) * 1.05;
     const title = mode === 'week' ? `${formatShortDate(range.start, t)} – ${formatShortDate(range.end, t)}` : `${t('months')[fromKey(range.start).getMonth()]} ${fromKey(range.start).getFullYear()}`;
     const signed = (value) => `${value > 0 ? '+' : ''}${value}`;
 
@@ -204,7 +206,6 @@ export default function OverviewPanel({ nutrition, plan, today, onOpenDay }) {
                     <DayRow
                         key={row.key}
                         row={row}
-                        plan={plan}
                         ceiling={ceiling}
                         open={openKey === row.key}
                         onToggle={() => setOpenKey(openKey === row.key ? null : row.key)}

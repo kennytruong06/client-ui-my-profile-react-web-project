@@ -6,6 +6,8 @@ export const ACTIVITY_LEVELS = { sedentary: 1.2, light: 1.375, moderate: 1.55, a
 export const LOSS_RATES = [0.25, 0.5, 0.75, 1];
 export const PROTEIN_PER_KG = 1.8;
 export const FAT_SHARE = 0.25;
+export const FIBER_PER_1000_KCAL = 14;
+export const FIBER_MIN = 25;
 
 export function emptyProfile() {
     return { sex: 'male', age: '', heightCm: '', weightKg: '', goalKg: '', activity: 'light', lossRate: 0.5 };
@@ -25,21 +27,42 @@ export function currentWeightKg(nutrition) {
     return latestWeight(nutrition)?.kg ?? (Number(nutrition.profile?.weightKg) || 0);
 }
 
+export function weightOnDate(nutrition, date) {
+    const keys = Object.keys(nutrition.weights).filter((key) => key <= date).sort();
+    const last = keys[keys.length - 1];
+    return last ? nutrition.weights[last] : Number(nutrition.profile?.weightKg) || 0;
+}
+
+export function basisWeightOnDate(nutrition, date) {
+    const start = Number(nutrition.profile?.weightKg) || 0;
+    const logged = Object.keys(nutrition.weights).filter((key) => key <= date).map((key) => nutrition.weights[key]);
+    const candidates = [start, ...logged].filter((kg) => kg > 0);
+    return candidates.length ? Math.min(...candidates) : 0;
+}
+
+export function planForDate(nutrition, date) {
+    if (!profileReady(nutrition.profile)) {
+        return null;
+    }
+    return planOf(nutrition.profile, basisWeightOnDate(nutrition, date), weightOnDate(nutrition, date));
+}
+
 export function bmrOf(profile, weightKg) {
     const base = 10 * weightKg + 6.25 * Number(profile.heightCm) - 5 * Number(profile.age);
     return Math.round(base + (profile.sex === 'female' ? -161 : 5));
 }
 
-export function planOf(profile, weightKg) {
+export function planOf(profile, weightKg, currentKg = weightKg) {
     const bmr = bmrOf(profile, weightKg);
     const tdee = Math.round(bmr * (ACTIVITY_LEVELS[profile.activity] ?? ACTIVITY_LEVELS.light));
     const wantedDeficit = Math.round((Number(profile.lossRate) * KCAL_PER_KG) / 7);
     const target = Math.max(tdee - wantedDeficit, bmr);
     const goal = Number(profile.goalKg) || 0;
-    const toLose = goal > 0 ? Math.max(weightKg - goal, 0) : 0;
+    const toLose = goal > 0 ? Math.max(currentKg - goal, 0) : 0;
     const weeklyKg = ((tdee - target) * 7) / KCAL_PER_KG;
     const heightM = Number(profile.heightCm) / 100;
     const fat = Math.round((target * FAT_SHARE) / 9);
+    const fiber = Math.max(FIBER_MIN, Math.round((target / 1000) * FIBER_PER_1000_KCAL));
     const protein = Math.round(weightKg * PROTEIN_PER_KG);
 
     return {
@@ -49,9 +72,10 @@ export function planOf(profile, weightKg) {
         deficit: tdee - target,
         clamped: tdee - wantedDeficit < bmr,
         protein,
+        fiber,
         fat,
         carbs: Math.max(Math.round((target - protein * 4 - fat * 9) / 4), 0),
-        bmi: heightM > 0 ? weightKg / (heightM * heightM) : null,
+        bmi: heightM > 0 ? currentKg / (heightM * heightM) : null,
         toLose,
         weeksToGoal: toLose > 0 && weeklyKg > 0 ? Math.ceil(toLose / weeklyKg) : null,
         weeklyKg,
@@ -66,6 +90,13 @@ export function mealBase(meal) {
     return meal.amount > 0 ? { amount: meal.amount, unit: meal.unit ?? 'g' } : null;
 }
 
+export function mealFiber(meal) {
+    if (meal.fiber != null) {
+        return meal.fiber;
+    }
+    return meal.foodId ? foodById(meal.foodId)?.fiber ?? 0 : 0;
+}
+
 export function mealName(meal, tx) {
     const known = meal.foodId ? foodById(meal.foodId) : null;
     return known ? tx(known.name) : meal.name;
@@ -78,7 +109,8 @@ export function dayTotals(entry) {
         protein: sum.protein + (meal.protein ?? 0) * meal.qty,
         carbs: sum.carbs + (meal.carbs ?? 0) * meal.qty,
         fat: sum.fat + (meal.fat ?? 0) * meal.qty,
-    }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+        fiber: sum.fiber + mealFiber(meal) * meal.qty,
+    }), { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
 }
 
 export function verdictOf(plan, eaten, burn, hasMeals) {
@@ -99,13 +131,14 @@ export function verdictOf(plan, eaten, burn, hasMeals) {
     return { key, deficit };
 }
 
-export function weekSummary(nutrition, plan, endKey, days = 7) {
+export function weekSummary(nutrition, endKey, days = 7) {
     const keys = rangeKeys(addDays(endKey, -(days - 1)), endKey);
     const rows = keys.map((key) => {
         const entry = nutrition.days[key];
+        const dayPlan = planForDate(nutrition, key);
         const logged = Boolean(entry?.meals?.length);
         const eaten = dayTotals(entry).kcal;
-        return { key, logged, eaten, burn: entry?.burn ?? 0, deficit: logged ? Math.round(plan.tdee + (entry?.burn ?? 0) - eaten) : null };
+        return { key, logged, eaten, burn: entry?.burn ?? 0, target: dayPlan.target, deficit: logged ? Math.round(dayPlan.tdee + (entry?.burn ?? 0) - eaten) : null };
     });
     const logged = rows.filter((row) => row.logged);
     const totalDeficit = logged.reduce((sum, row) => sum + row.deficit, 0);
@@ -134,9 +167,10 @@ export function firstLoggedDate(nutrition) {
     return Object.keys(nutrition.days).filter((key) => nutrition.days[key].meals.length > 0).sort()[0] ?? null;
 }
 
-export function eatingStateFn(nutrition, plan) {
+export function eatingStateFn(nutrition) {
     const first = firstLoggedDate(nutrition);
     return (key) => {
+        const plan = planForDate(nutrition, key);
         if (!plan || !first || key < first) {
             return { state: 'none', eaten: 0, logged: false };
         }
@@ -154,9 +188,9 @@ const roundTo = (value, step) => Math.round(value / step) * step;
 export function foodBase(ref) {
     const known = ref.foodId ? foodById(ref.foodId) : null;
     if (known) {
-        return { amount: known.amount, unit: known.unit, kcal: known.kcal, protein: known.protein, carbs: known.carbs, fat: known.fat };
+        return { amount: known.amount, unit: known.unit, kcal: known.kcal, protein: known.protein, carbs: known.carbs, fat: known.fat, fiber: known.fiber };
     }
-    return { amount: 100, unit: ref.unit ?? 'g', kcal: ref.kcal ?? 0, protein: ref.protein ?? 0, carbs: ref.carbs ?? 0, fat: ref.fat ?? 0 };
+    return { amount: 100, unit: ref.unit ?? 'g', kcal: ref.kcal ?? 0, protein: ref.protein ?? 0, carbs: ref.carbs ?? 0, fat: ref.fat ?? 0, fiber: ref.fiber ?? 0 };
 }
 
 export function foodLabel(ref, tx) {
@@ -167,14 +201,14 @@ export function foodLabel(ref, tx) {
 export function portionOf(ref, amount) {
     const base = foodBase(ref);
     const ratio = amount / base.amount;
-    return { kcal: base.kcal * ratio, protein: base.protein * ratio, carbs: base.carbs * ratio, fat: base.fat * ratio };
+    return { kcal: base.kcal * ratio, protein: base.protein * ratio, carbs: base.carbs * ratio, fat: base.fat * ratio, fiber: base.fiber * ratio };
 }
 
 export function plannedTotals(entries) {
     return entries.reduce((sum, entry) => {
         const portion = portionOf(entry, entry.amount);
-        return { kcal: sum.kcal + portion.kcal, protein: sum.protein + portion.protein, carbs: sum.carbs + portion.carbs, fat: sum.fat + portion.fat };
-    }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+        return { kcal: sum.kcal + portion.kcal, protein: sum.protein + portion.protein, carbs: sum.carbs + portion.carbs, fat: sum.fat + portion.fat, fiber: sum.fiber + portion.fiber };
+    }, { kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
 }
 
 export function reservedOf(entries, fridgeId, todayKey) {
@@ -198,7 +232,7 @@ export function foodRefOf(item) {
     if (item.foodId) {
         return { foodId: item.foodId };
     }
-    return { name: item.name, unit: item.unit ?? 'g', kcal: item.kcal ?? 0, protein: item.protein ?? 0, carbs: item.carbs ?? 0, fat: item.fat ?? 0 };
+    return { name: item.name, unit: item.unit ?? 'g', kcal: item.kcal ?? 0, protein: item.protein ?? 0, carbs: item.carbs ?? 0, fat: item.fat ?? 0, fiber: item.fiber ?? 0 };
 }
 
 export function mealFromPlan(entry, mealId) {
@@ -211,6 +245,7 @@ export function mealFromPlan(entry, mealId) {
         protein: base.protein,
         carbs: base.carbs,
         fat: base.fat,
+        fiber: base.fiber,
     };
     return entry.foodId ? { ...meal, foodId: entry.foodId } : { ...meal, name: entry.name, amount: base.amount, unit: base.unit };
 }
