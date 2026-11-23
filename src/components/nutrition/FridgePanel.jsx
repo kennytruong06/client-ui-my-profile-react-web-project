@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { LuPlus, LuRefrigerator, LuSearch, LuTrash2 } from 'react-icons/lu';
+import { LuHourglass, LuPlus, LuRefrigerator, LuSearch, LuSparkles, LuTrash2 } from 'react-icons/lu';
 import AmountField from '@/components/nutrition/AmountField';
 import { useI18n } from '@/i18n/I18nProvider';
 import { FOODS } from '@/data/foods';
 import { JOURNAL_EDITABLE, addFridgeItem, removeFridgeItem, updateFridgeItem } from '@/store/journalStore';
-import { foodBase, foodLabel, fridgeLeft, portionOf } from '@/lib/nutrition';
+import { foodBase, foodLabel, fridgeLeft, piecesOf, portionOf } from '@/lib/nutrition';
 
 const EMPTY_CUSTOM = { name: '', amount: '', unit: 'g', kcal: '', protein: '', carbs: '', fat: '', fiber: '' };
 
@@ -19,15 +19,44 @@ function FridgeRow({ item, left, locked }) {
     const reserved = Math.round((item.amount - left) * 10) / 10;
     const short = left < 0;
     const kcal = Math.round(portionOf(item, item.amount).kcal);
+    const totalPieces = piecesOf(item, item.amount);
+    const leftPieces = piecesOf(item, Math.max(left, 0));
 
     return (
-        <li className={`rounded-xl border px-3 py-2.5 ${short ? 'border-danger/40 bg-danger/5' : 'border-line bg-ink-900/50'}`}>
+        <li className={`rounded-xl border px-3 py-2.5 ${short ? 'border-danger/40 bg-danger/5' : item.old ? 'border-amber-400/40 bg-amber-400/5' : item.new ? 'border-emerald-400/40 bg-emerald-400/5' : 'border-line bg-ink-900/50'}`}>
             <div className="flex items-center gap-3">
                 <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{foodLabel(item, tx)}</p>
-                    <p className="truncate font-mono text-xs text-faint">{kcal} kcal</p>
+                    <p className="text-sm font-medium">{foodLabel(item, tx)}</p>
+                    <p className="font-mono text-xs text-faint">
+                        {kcal} kcal
+                        {totalPieces != null && ` · ${t('nutrition.fridge.pieces', { n: totalPieces, unit: item.pieceUnit })}`}
+                    </p>
+                    {item.old && <p className="font-mono text-xs font-semibold text-amber-300">{t('nutrition.fridge.old')}</p>}
+                    {item.new && <p className="font-mono text-xs font-semibold text-emerald-300">{t('nutrition.fridge.new')}</p>}
                 </div>
                 <AmountField value={item.amount} unit={base.unit} disabled={locked} onCommit={(amount) => updateFridgeItem(item.id, { amount })} />
+                {!locked && (
+                    <button
+                        type="button"
+                        aria-label={item.old ? t('nutrition.fridge.unmarkOld') : t('nutrition.fridge.markOld')}
+                        title={item.old ? t('nutrition.fridge.unmarkOld') : t('nutrition.fridge.markOld')}
+                        onClick={() => updateFridgeItem(item.id, { old: !item.old, new: false })}
+                        className={`grid h-7 w-7 place-items-center rounded-lg transition ${item.old ? 'text-amber-300' : 'text-faint hover:text-amber-300'}`}
+                    >
+                        <LuHourglass size={15} />
+                    </button>
+                )}
+                {!locked && (
+                    <button
+                        type="button"
+                        aria-label={item.new ? t('nutrition.fridge.unmarkNew') : t('nutrition.fridge.markNew')}
+                        title={item.new ? t('nutrition.fridge.unmarkNew') : t('nutrition.fridge.markNew')}
+                        onClick={() => updateFridgeItem(item.id, { new: !item.new, old: false })}
+                        className={`grid h-7 w-7 place-items-center rounded-lg transition ${item.new ? 'text-emerald-300' : 'text-faint hover:text-emerald-300'}`}
+                    >
+                        <LuSparkles size={15} />
+                    </button>
+                )}
                 {!locked && (
                     <button type="button" aria-label={t('nutrition.fridge.remove')} onClick={() => removeFridgeItem(item.id)} className="grid h-7 w-7 place-items-center rounded-lg text-faint transition hover:text-danger">
                         <LuTrash2 size={15} />
@@ -38,8 +67,20 @@ function FridgeRow({ item, left, locked }) {
                 {short
                     ? t('nutrition.fridge.short', { n: Math.abs(left), unit: base.unit })
                     : t('nutrition.fridge.left', { n: left, unit: base.unit })}
+                {leftPieces != null && !short && ` (${t('nutrition.fridge.pieces', { n: leftPieces, unit: item.pieceUnit })})`}
                 {reserved > 0 && ` · ${t('nutrition.fridge.reserved', { n: reserved, unit: base.unit })}`}
             </p>
+            {locked && item.note && <p className="mt-1.5 text-xs text-muted">{item.note}</p>}
+            {!locked && (
+                <textarea
+                    key={item.note ?? ''}
+                    rows={2}
+                    defaultValue={item.note ?? ''}
+                    placeholder={t('nutrition.fridge.notePlaceholder')}
+                    onBlur={(event) => event.target.value !== (item.note ?? '') && updateFridgeItem(item.id, { note: event.target.value.trim() })}
+                    className="field field-sizing-content mt-2 resize-y !py-1.5 text-xs"
+                />
+            )}
         </li>
     );
 }
@@ -148,6 +189,21 @@ function AddFood() {
     );
 }
 
+function FridgeGroup({ title, tone, items, nutrition, today, locked }) {
+    if (items.length === 0) {
+        return null;
+    }
+
+    return (
+        <div className="mb-4">
+            <p className={`mb-2 text-xs font-semibold uppercase tracking-wider ${tone}`}>{title} · {items.length}</p>
+            <ul className="space-y-2">
+                {items.map((item) => <FridgeRow key={item.id} item={item} left={fridgeLeft(item, nutrition.plan, today)} locked={locked} />)}
+            </ul>
+        </div>
+    );
+}
+
 export default function FridgePanel({ nutrition, today }) {
     const { t } = useI18n();
     const locked = !JOURNAL_EDITABLE;
@@ -163,9 +219,11 @@ export default function FridgePanel({ nutrition, today }) {
             {nutrition.fridge.length === 0 ? (
                 <p className="mb-4 rounded-xl border border-dashed border-line p-4 text-sm text-muted">{t('nutrition.fridge.empty')}</p>
             ) : (
-                <ul className="mb-4 space-y-2">
-                    {nutrition.fridge.map((item) => <FridgeRow key={item.id} item={item} left={fridgeLeft(item, nutrition.plan, today)} locked={locked} />)}
-                </ul>
+                <>
+                    <FridgeGroup title={t('nutrition.fridge.sectionNew')} tone="text-emerald-300" items={nutrition.fridge.filter((item) => item.new)} nutrition={nutrition} today={today} locked={locked} />
+                    <FridgeGroup title={t('nutrition.fridge.sectionOld')} tone="text-amber-300" items={nutrition.fridge.filter((item) => item.old && !item.new)} nutrition={nutrition} today={today} locked={locked} />
+                    <FridgeGroup title={t('nutrition.fridge.sectionOther')} tone="text-faint" items={nutrition.fridge.filter((item) => !item.old && !item.new)} nutrition={nutrition} today={today} locked={locked} />
+                </>
             )}
 
             {!locked && <AddFood />}

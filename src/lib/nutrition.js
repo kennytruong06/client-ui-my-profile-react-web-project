@@ -221,6 +221,14 @@ export function fridgeLeft(item, entries, todayKey) {
     return Math.round((item.amount - reservedOf(entries, item.id, todayKey)) * 10) / 10;
 }
 
+export function fridgeByPriority(fridge) {
+    return [...fridge].sort((a, b) => Number(Boolean(b.old)) - Number(Boolean(a.old)));
+}
+
+export function piecesOf(item, amount) {
+    return item.pieceG > 0 ? Math.round((amount / item.pieceG) * 10) / 10 : null;
+}
+
 export function splitSuggestion(left, parts) {
     if (parts === 1) {
         return left;

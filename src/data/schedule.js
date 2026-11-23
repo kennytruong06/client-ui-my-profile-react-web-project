@@ -319,7 +319,14 @@ function withSessionLogs(tasks) {
     }, tasks);
 }
 
-export const WEEK_TEMPLATE = Object.fromEntries(Object.entries(LEGACY_WEEK_TEMPLATE).map(([weekday, tasks]) => [weekday, withSessionLogs(tasks)]));
+const BLOCK_MINUTES = 60;
+const BLOCK_CATEGORIES = ['english', 'guitar', 'piano'];
+
+function hourlyBlocks(tasks) {
+    return tasks.map((task) => (BLOCK_CATEGORIES.includes(task.category) ? { ...task, minutes: BLOCK_MINUTES } : task));
+}
+
+export const WEEK_TEMPLATE = Object.fromEntries(Object.entries(LEGACY_WEEK_TEMPLATE).map(([weekday, tasks]) => [weekday, withSessionLogs(hourlyBlocks(tasks))]));
 
 export const WAKE_TIME = '05:00';
 export const BEDTIME = '23:00';

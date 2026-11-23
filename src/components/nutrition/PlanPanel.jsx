@@ -6,10 +6,11 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { FOODS, MEAL_SLOTS } from '@/data/foods';
 import { JOURNAL_EDITABLE, addPlanEntry, removePlanEntry, setMenu, setPlanDone, updatePlanEntry } from '@/store/journalStore';
 import { addDays, formatLongDate, weekdayOf } from '@/lib/date';
-import { dayTotals, foodBase, foodLabel, foodRefOf, fridgeLeft, plannedTotals, planForDate, portionOf, shoppingItems, splitSuggestion } from '@/lib/nutrition';
+import { dayTotals, foodBase, foodLabel, foodRefOf, fridgeByPriority, fridgeLeft, plannedTotals, planForDate, portionOf, shoppingItems, splitSuggestion } from '@/lib/nutrition';
 
 const STRIP_RADIUS = 3;
 const MAIN_SLOTS = ['breakfast', 'lunch', 'dinner', 'snack'];
+const MAIN_MEAL_SLOTS = ['breakfast', 'lunch', 'dinner'];
 const EMPTY_CUSTOM = { name: '', amount: '', kcal: '' };
 
 function fold(text) {
@@ -38,8 +39,10 @@ function DayStrip({ nutrition, date, today, onSelect }) {
         <div className="mb-4 grid grid-cols-7 gap-1.5">
             {keys.map((key) => {
                 const entries = nutrition.plan.filter((entry) => entry.date === key);
-                const kcal = Math.round(plannedTotals(entries).kcal);
-                const allDone = entries.length > 0 && entries.every((entry) => entry.done);
+                const day = nutrition.days[key];
+                const kcal = Math.round(entries.length > 0 ? plannedTotals(entries).kcal : dayTotals(day).kcal);
+                const mainMealsLogged = MAIN_MEAL_SLOTS.every((slot) => day?.meals.some((meal) => meal.slot === slot));
+                const allDone = entries.length > 0 ? entries.every((entry) => entry.done) : mainMealsLogged;
                 const selected = key === date;
                 return (
                     <button
@@ -260,9 +263,9 @@ function AddFromFridge({ nutrition, date, slot, today }) {
         <div className="space-y-2">
             <select value={fridgeId} onChange={(event) => pick(event.target.value)} aria-label={t('nutrition.menu.pickItem')} className="field">
                 <option value="">{t('nutrition.menu.pickItem')}</option>
-                {nutrition.fridge.map((candidate) => {
+                {fridgeByPriority(nutrition.fridge).map((candidate) => {
                     const candidateLeft = Math.max(fridgeLeft(candidate, nutrition.plan, today), 0);
-                    return <option key={candidate.id} value={candidate.id}>{foodLabel(candidate, tx)} · {candidateLeft}{foodBase(candidate).unit}</option>;
+                    return <option key={candidate.id} value={candidate.id}>{`${candidate.old ? `${t('nutrition.fridge.oldShort')} · ` : candidate.new ? `${t('nutrition.fridge.newShort')} · ` : ''}${foodLabel(candidate, tx)} · ${candidateLeft}${foodBase(candidate).unit}`}</option>;
                 })}
             </select>
             {item && (

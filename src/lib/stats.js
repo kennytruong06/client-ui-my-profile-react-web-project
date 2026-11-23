@@ -3,6 +3,7 @@ import { ROADMAP_LENGTH } from '@/data/ieltsRoadmap';
 import { addDays, rangeKeys, weekdayOf } from '@/lib/date';
 
 export const STREAK_THRESHOLD = 0.5;
+export const STREAK_MIN_UNITS = 3;
 export const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 200, 365];
 
 export function taskUnits(task, record) {
@@ -41,7 +42,7 @@ export function dayStatus(journal, key) {
     const mandatoryDone = mandatoryUnits.done;
     const optional = tasks.filter((task) => !task.mandatory);
     const optionalDone = optional.filter((task) => records[task.id]?.status === 'done').length;
-    const keepTarget = Math.ceil(mandatoryUnits.total * STREAK_THRESHOLD);
+    const keepTarget = Math.min(STREAK_MIN_UNITS, mandatoryUnits.total);
     return {
         tasks,
         records,
