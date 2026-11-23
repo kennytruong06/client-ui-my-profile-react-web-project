@@ -279,12 +279,18 @@ task,2026-11-21,english-study,,,,,120,
 task-session,2026-11-21,english-study.mwqbeng1lstn01,,,,Ôn lại listening 2 tiếng,120,listening-review
 task,2026-11-21,skincare,skipped,,,"Không làm được vì đang ở nhà, không có dụng cụ skin care; Sắp xếp chưa tốt",,
 task,2026-11-22,skincare,done,,remover|cleanser,,,
-task,2026-11-23,exercise-log,,,,,5,
+task,2026-11-23,exercise-log,done,,,,65,
 task-session,2026-11-23,exercise-log.mwsjbf2pugclr,,,20,set 1,1,pushups
 task-session,2026-11-23,exercise-log.mwsjbkwwpkgs7,,,15,set 1,1,squats
 task-session,2026-11-23,exercise-log.mwsjbpnopy0pj,,,50,set 1,1,crunches
 task-session,2026-11-23,exercise-log.mwsjc4v5gleah,,,50,set 2,1,crunches
 task-session,2026-11-23,exercise-log.mwsjd2do2nrtz,,,50,,1,pushups
+task-session,2026-11-23,exercise-log.mwtdqwvzn7qrt,,,,,60,walk
+task,2026-11-23,skincare,done,,remover|cleanser,,,
+task,2026-11-23,piano-extra,skipped,,,Sắp xếp chưa tốt,,
+task,2026-11-23,guitar-extra,skipped,,,Sắp xếp chưa tốt,,
+task,2026-11-23,english-study,,,,,60,
+task-session,2026-11-23,english-study.mwtdrswox0rig,,,,,60,listening-review
 english-day,2026-11-18,1,done,,,,,
 english-skill,,1.listening,,,,"Điểm cần cải thiện
 
@@ -401,6 +407,7 @@ meal,2026-11-22,mwrpqv1qe33e,,,,"{""id"":""mwrpqv1qe33e"",""slot"":""dinner"",""
 meal,2026-11-22,mwrpqv1qlll4,,,,"{""id"":""mwrpqv1qlll4"",""slot"":""dinner"",""qty"":0.77,""kcal"":227.3,""protein"":20,""carbs"":6.5,""fat"":13,""fiber"":0,""name"":""Bò kho"",""amount"":100,""unit"":""g""}",,
 meal,2026-11-22,mwrpqv1q7u0m,,,,"{""id"":""mwrpqv1q7u0m"",""slot"":""dinner"",""qty"":2,""kcal"":17.5,""protein"":1.2,""carbs"":2,""fat"":0.5,""fiber"":0.3,""name"":""Canh rong biển"",""amount"":100,""unit"":""ml""}",,
 meal,2026-11-22,mwrpqv1qbp2j,,,,"{""id"":""mwrpqv1qbp2j"",""slot"":""dinner"",""qty"":0.6667,""kcal"":200,""protein"":4,""carbs"":44,""fat"":0.4,""fiber"":0.6,""foodId"":""rice-white""}",,
+nutrition-day,2026-11-23,,,,,,100,
 meal,2026-11-23,mwsj0hklhmfuw,,,,"{""id"":""mwsj0hklhmfuw"",""slot"":""breakfast"",""qty"":1,""kcal"":143,""protein"":12.6,""carbs"":0.7,""fat"":9.5,""fiber"":0,""name"":""Trứng gà (2 quả)"",""amount"":100,""unit"":""g""}",,
 meal,2026-11-23,mwsj0hklnotte,,,,"{""id"":""mwsj0hklnotte"",""slot"":""breakfast"",""qty"":0.1,""kcal"":717,""protein"":0.9,""carbs"":0.1,""fat"":81,""fiber"":0,""name"":""Bơ lạt"",""amount"":100,""unit"":""g""}",,
 meal,2026-11-23,mwsj0hklp55tt,,,,"{""id"":""mwsj0hklp55tt"",""slot"":""breakfast"",""qty"":1.1,""kcal"":110,""protein"":1,""carbs"":27,""fat"":0.2,""fiber"":2.6,""name"":""Chuối xanh nải mới (2 quả)"",""amount"":100,""unit"":""g""}",,
@@ -416,14 +423,12 @@ meal,2026-11-23,mwsj59sf3nner,,,,"{""id"":""mwsj59sf3nner"",""slot"":""lunch"","
 meal,2026-11-23,mwsj97xj7uzcg,,,,"{""id"":""mwsj97xj7uzcg"",""slot"":""snack"",""qty"":0.5,""kcal"":5,""protein"":0.3,""carbs"":0,""fat"":0,""fiber"":0,""foodId"":""coffee-black""}",,
 meal,2026-11-23,mwsj97xkd8bwe,,,,"{""id"":""mwsj97xkd8bwe"",""slot"":""snack"",""qty"":0.15,""kcal"":400,""protein"":0,""carbs"":100,""fat"":0,""fiber"":0,""name"":""Đường"",""amount"":100,""unit"":""g""}",,
 meal,2026-11-23,mwsj97xk4jow2,,,,"{""id"":""mwsj97xk4jow2"",""slot"":""snack"",""qty"":1.8,""kcal"":52,""protein"":0.3,""carbs"":13.8,""fat"":0.2,""fiber"":2.4,""name"":""Táo xanh"",""amount"":100,""unit"":""g""}",,
+meal,2026-11-23,mwtdsqs4wr8ic,,,,"{""id"":""mwtdsqs4wr8ic"",""slot"":""dinner"",""qty"":0.6667,""kcal"":200,""protein"":4,""carbs"":44,""fat"":0.4,""fiber"":0.6,""foodId"":""rice-white""}",,
+meal,2026-11-23,mwtdsqs5isu5a,,,,"{""id"":""mwtdsqs5isu5a"",""slot"":""dinner"",""qty"":1.3,""kcal"":190,""protein"":20,""carbs"":2,""fat"":12,""fiber"":0,""name"":""Vịt kho"",""amount"":100,""unit"":""g""}",,
+meal,2026-11-23,mwtdsqs5b81jg,,,,"{""id"":""mwtdsqs5b81jg"",""slot"":""dinner"",""qty"":2.15,""kcal"":13,""protein"":1.5,""carbs"":2.2,""fat"":0.2,""fiber"":1,""name"":""Cải thìa"",""amount"":100,""unit"":""g""}",,
 fridge-item,,f330ceb4w7sjq,,,,"{""name"":""Trứng gà"",""unit"":""g"",""amount"":250,""kcal"":143,""protein"":12.6,""carbs"":0.7,""fat"":9.5,""id"":""f330ceb4w7sjq"",""fiber"":0,""old"":true,""pieceG"":50,""pieceUnit"":""quả""}",,
-fridge-item,,f3303c57q0urg,,,,"{""name"":""Hành tây"",""unit"":""g"",""amount"":0,""kcal"":40,""protein"":1.1,""carbs"":9.3,""fat"":0.1,""id"":""f3303c57q0urg"",""fiber"":1.7,""old"":true}",,
-fridge-item,,f3303f8683yeg,,,,"{""name"":""Cải thìa"",""unit"":""g"",""amount"":215,""kcal"":13,""protein"":1.5,""carbs"":2.2,""fat"":0.2,""id"":""f3303f8683yeg"",""fiber"":1,""old"":true,""note"":""Mẹ dặn ưu tiên ăn trước kẻo để hư. Xếp ăn tối thứ 2 (23/11).""}",,
 fridge-item,,f330d968bg1z2,,,,"{""name"":""Bí đỏ"",""unit"":""g"",""amount"":300,""kcal"":40,""protein"":1.1,""carbs"":10,""fat"":0.2,""id"":""f330d968bg1z2"",""fiber"":1.5,""old"":true}",,
-fridge-item,,f3311c62gnymi,,,,"{""name"":""Chả cua"",""unit"":""g"",""amount"":0,""kcal"":180,""protein"":14,""carbs"":3,""fat"":12,""id"":""f3311c62gnymi"",""fiber"":0.2,""old"":true}",,
 fridge-item,,f3304a285g93a,,,,"{""name"":""Giò heo hầm"",""unit"":""g"",""amount"":290,""kcal"":250,""protein"":20,""carbs"":0,""fat"":18,""id"":""f3304a285g93a"",""fiber"":0,""old"":true}",,
-fridge-item,,f3308298fb3y2,,,,"{""name"":""Bò ướp"",""unit"":""g"",""amount"":0,""kcal"":175,""protein"":20,""carbs"":2,""fat"":10,""id"":""f3308298fb3y2"",""fiber"":0,""old"":true}",,
-fridge-item,,f3303f68qi4s2,,,,"{""name"":""Vịt kho"",""unit"":""g"",""amount"":130,""kcal"":190,""protein"":20,""carbs"":2,""fat"":12,""id"":""f3303f68qi4s2"",""fiber"":0,""old"":true}",,
 fridge-item,,f330d3c4sk32t,,,,"{""name"":""Dưa leo"",""unit"":""g"",""amount"":152,""kcal"":15,""protein"":0.7,""carbs"":3.6,""fat"":0.1,""id"":""f330d3c4sk32t"",""fiber"":0.5,""old"":true}",,
 fridge-item,,f330a312cent0,,,,"{""name"":""Táo xanh"",""unit"":""g"",""amount"":180,""kcal"":52,""protein"":0.3,""carbs"":13.8,""fat"":0.2,""id"":""f330a312cent0"",""fiber"":2.4,""old"":true}",,
 fridge-item,,f33039153e362,,,,"{""name"":""Táo Mỹ"",""unit"":""g"",""amount"":180,""kcal"":52,""protein"":0.3,""carbs"":13.8,""fat"":0.2,""id"":""f33039153e362"",""fiber"":2.4,""old"":true}",,
@@ -515,9 +520,9 @@ meal-plan,2026-11-23,fmwsj5497nsny,done,,,"{""done"":true,""mealId"":""mwsj59sf3
 meal-plan,2026-11-23,fmwrvvo3d6qik,done,,,"{""done"":true,""mealId"":""mwsj97xj7uzcg"",""foodId"":""coffee-black"",""fridgeId"":null,""slot"":""snack"",""amount"":100,""id"":""fmwrvvo3d6qik""}",,
 meal-plan,2026-11-23,fmwsj7ihryf7w,done,,,"{""done"":true,""mealId"":""mwsj97xkd8bwe"",""name"":""Đường"",""unit"":""g"",""kcal"":400,""protein"":0,""carbs"":100,""fat"":0,""fiber"":0,""fridgeId"":null,""slot"":""snack"",""amount"":15,""id"":""fmwsj7ihryf7w""}",,
 meal-plan,2026-11-23,fmwrvvo3d4l4g,done,,,"{""done"":true,""mealId"":""mwsj97xk4jow2"",""name"":""Táo xanh"",""unit"":""g"",""kcal"":52,""protein"":0.3,""carbs"":13.8,""fat"":0.2,""fridgeId"":""f330a312cent0"",""slot"":""snack"",""amount"":180,""id"":""fmwrvvo3d4l4g"",""fiber"":2.4}",,
-meal-plan,2026-11-23,fmwrvvo3d8yhn,,,,"{""done"":false,""mealId"":null,""foodId"":""rice-white"",""fridgeId"":null,""slot"":""dinner"",""amount"":100,""id"":""fmwrvvo3d8yhn""}",,
-meal-plan,2026-11-23,fmwrvvo3dg1iw,,,,"{""done"":false,""mealId"":null,""name"":""Vịt kho"",""unit"":""g"",""kcal"":190,""protein"":20,""carbs"":2,""fat"":12,""fridgeId"":""f3303f68qi4s2"",""slot"":""dinner"",""amount"":130,""id"":""fmwrvvo3dg1iw"",""fiber"":0}",,
-meal-plan,2026-11-23,fmwrvvo3dtug6,,,,"{""done"":false,""mealId"":null,""name"":""Cải thìa"",""unit"":""g"",""kcal"":13,""protein"":1.5,""carbs"":2.2,""fat"":0.2,""fridgeId"":""f3303f8683yeg"",""slot"":""dinner"",""amount"":215,""id"":""fmwrvvo3dtug6"",""fiber"":1}",,
+meal-plan,2026-11-23,fmwrvvo3d8yhn,done,,,"{""done"":true,""mealId"":""mwtdsqs4wr8ic"",""foodId"":""rice-white"",""fridgeId"":null,""slot"":""dinner"",""amount"":100,""id"":""fmwrvvo3d8yhn""}",,
+meal-plan,2026-11-23,fmwrvvo3dg1iw,done,,,"{""done"":true,""mealId"":""mwtdsqs5isu5a"",""name"":""Vịt kho"",""unit"":""g"",""kcal"":190,""protein"":20,""carbs"":2,""fat"":12,""fridgeId"":""f3303f68qi4s2"",""slot"":""dinner"",""amount"":130,""id"":""fmwrvvo3dg1iw"",""fiber"":0}",,
+meal-plan,2026-11-23,fmwrvvo3dtug6,done,,,"{""done"":true,""mealId"":""mwtdsqs5b81jg"",""name"":""Cải thìa"",""unit"":""g"",""kcal"":13,""protein"":1.5,""carbs"":2.2,""fat"":0.2,""fridgeId"":""f3303f8683yeg"",""slot"":""dinner"",""amount"":215,""id"":""fmwrvvo3dtug6"",""fiber"":1}",,
 meal-plan,2026-11-24,fmwrvvo3dcqus,,,,"{""done"":false,""mealId"":null,""name"":""Trứng gà (2 quả)"",""unit"":""g"",""kcal"":143,""protein"":12.6,""carbs"":0.7,""fat"":9.5,""fridgeId"":""f330ceb4w7sjq"",""slot"":""breakfast"",""amount"":100,""id"":""fmwrvvo3dcqus"",""fiber"":0}",,
 meal-plan,2026-11-24,fmwrvvo3dps1y,,,,"{""done"":false,""mealId"":null,""name"":""Bơ lạt"",""unit"":""g"",""kcal"":717,""protein"":0.9,""carbs"":0.1,""fat"":81,""fridgeId"":""fmwrvd9i2a0s"",""slot"":""breakfast"",""amount"":10,""id"":""fmwrvvo3dps1y"",""fiber"":0}",,
 meal-plan,2026-11-24,fmwrvvo3d80bn,,,,"{""done"":false,""mealId"":null,""name"":""Chuối xanh nải mới (2 quả)"",""unit"":""g"",""kcal"":110,""protein"":1,""carbs"":27,""fat"":0.2,""fridgeId"":""fmwrvd9jju3x0"",""slot"":""breakfast"",""amount"":116,""id"":""fmwrvvo3d80bn"",""fiber"":2.6}",,
