@@ -137,9 +137,9 @@ export default {
         best: 'Best',
         english: {
             title: 'English streak',
-            rule: 'Finish at least 50% of the mandatory English sessions each day.',
+            rule: 'Study at least 50% of the mandatory English hours each day.',
             kept: 'English done for today. The flame is kept.',
-            need: 'Finish {n} more English session(s) today to keep the flame.',
+            need: 'Study {n} more minutes of English today to keep the flame.',
             rest: 'Rest day for English. Studying anyway still counts.',
         },
         skincare: {

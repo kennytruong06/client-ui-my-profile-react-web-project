@@ -34,6 +34,25 @@ export function unitsOf(tasks, records) {
     );
 }
 
+export function taskProgress(task, record) {
+    const units = taskUnits(task, record);
+    const target = (task.slots ?? []).reduce((sum, slot) => sum + slot, 0);
+    if (target === 0 || units.done === units.total) {
+        return units;
+    }
+    return { total: units.total, done: (Math.min(record?.minutes ?? 0, target) / target) * units.total };
+}
+
+export function progressOf(tasks, records) {
+    return tasks.reduce(
+        (sum, task) => {
+            const progress = taskProgress(task, records[task.id]);
+            return { total: sum.total + progress.total, done: sum.done + progress.done };
+        },
+        { total: 0, done: 0 },
+    );
+}
+
 export function dayStatus(journal, key) {
     const tasks = tasksForDate(key);
     const records = journal.days[key]?.tasks ?? {};
@@ -110,8 +129,8 @@ export function categoryDayState(journal, key, category) {
     const tasks = tasksForDate(key).filter((task) => task.category === category);
     const records = journal.days[key]?.tasks ?? {};
     const mandatory = tasks.filter((task) => task.mandatory);
-    const units = unitsOf(mandatory, records);
-    const need = Math.ceil(units.total * STREAK_THRESHOLD);
+    const units = progressOf(mandatory, records);
+    const need = units.total * STREAK_THRESHOLD;
     const anyDone = tasks.some((task) => records[task.id]?.status === 'done');
     let state = units.done >= need ? 'kept' : 'broken';
     if (mandatory.length === 0) {

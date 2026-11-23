@@ -319,7 +319,7 @@ function withSessionLogs(tasks) {
     }, tasks);
 }
 
-const BLOCK_MINUTES = 60;
+export const BLOCK_MINUTES = 60;
 const BLOCK_CATEGORIES = ['english', 'guitar', 'piano'];
 
 function hourlyBlocks(tasks) {

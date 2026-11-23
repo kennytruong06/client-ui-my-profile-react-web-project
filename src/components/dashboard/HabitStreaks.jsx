@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { LuBookOpen, LuFlame, LuSalad, LuSparkles } from 'react-icons/lu';
 import AnimatedNumber from '@/components/AnimatedNumber';
 import { useI18n } from '@/i18n/I18nProvider';
+import { BLOCK_MINUTES } from '@/data/schedule';
 import { categoryDayState, habitDays, habitStreak } from '@/lib/stats';
 import { EATING_FLOOR, eatingStateFn, planForDate } from '@/lib/nutrition';
 import { fromKey } from '@/lib/date';
@@ -109,7 +110,7 @@ export default function HabitStreaks({ journal, today }) {
     if (english.state === 'rest') {
         englishMessage = { good: true, text: t('habit.english.rest') };
     } else if (english.state === 'broken') {
-        englishMessage = { good: false, text: t('habit.english.need', { n: english.need - english.done }) };
+        englishMessage = { good: false, text: t('habit.english.need', { n: Math.ceil((english.need - english.done) * BLOCK_MINUTES) }) };
     }
 
     const skincareMessage = skincare.state === 'kept' ? { good: true, text: t('habit.skincare.kept') } : { good: false, text: t('habit.skincare.need') };

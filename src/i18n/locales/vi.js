@@ -137,9 +137,9 @@ export default {
         best: 'Dài nhất',
         english: {
             title: 'Chuỗi học tiếng Anh',
-            rule: 'Mỗi ngày xong ít nhất 50% các buổi tiếng Anh bắt buộc.',
+            rule: 'Mỗi ngày học ít nhất 50% số giờ tiếng Anh bắt buộc.',
             kept: 'Hôm nay đã học tiếng Anh. Giữ được lửa.',
-            need: 'Làm thêm {n} buổi tiếng Anh hôm nay để giữ lửa.',
+            need: 'Học thêm {n} phút tiếng Anh hôm nay để giữ lửa.',
             rest: 'Hôm nay là ngày nghỉ tiếng Anh. Học thêm vẫn được tính.',
         },
         skincare: {
