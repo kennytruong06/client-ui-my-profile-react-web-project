@@ -14,6 +14,7 @@ async function readBody(req) {
 
 export default function journalApi() {
     let root = process.cwd();
+    let lastWritten = null;
 
     return {
         name: 'journal-csv-api',
@@ -21,11 +22,15 @@ export default function journalApi() {
         configResolved(config) {
             root = config.root;
         },
-        handleHotUpdate({ file }) {
-            if (file === path.join(root, RELATIVE_FILE)) {
-                return [];
+        async handleHotUpdate({ file, server }) {
+            if (file !== path.join(root, RELATIVE_FILE)) {
+                return undefined;
             }
-            return undefined;
+            const content = await fs.readFile(file, 'utf8');
+            if (content !== lastWritten) {
+                server.ws.send({ type: 'full-reload' });
+            }
+            return [];
         },
         configureServer(server) {
             server.middlewares.use(API_PATH, async (req, res) => {
@@ -44,7 +49,8 @@ export default function journalApi() {
                     }
                     const file = path.join(root, RELATIVE_FILE);
                     await fs.mkdir(path.dirname(file), { recursive: true });
-                    await fs.writeFile(file, `﻿${csv}\n`);
+                    lastWritten = `﻿${csv}\n`;
+                    await fs.writeFile(file, lastWritten);
                     res.end(JSON.stringify({ ok: true }));
                 } catch (error) {
                     res.statusCode = 500;

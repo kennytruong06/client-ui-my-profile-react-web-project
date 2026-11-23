@@ -77,15 +77,18 @@ export function useSaveStatus() {
     }, () => saveStatus);
 }
 
+const KEEPALIVE_LIMIT_BYTES = 60000;
+
 async function flush() {
     saveTimer = null;
     setSaveStatus('saving');
     try {
+        const body = JSON.stringify({ csv: toCsv(journalToRows(state)) });
         const response = await fetch(API, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ csv: toCsv(journalToRows(state)) }),
-            keepalive: true,
+            body,
+            keepalive: new TextEncoder().encode(body).length < KEEPALIVE_LIMIT_BYTES,
         });
         setSaveStatus(response.ok ? 'saved' : 'error');
     } catch {
