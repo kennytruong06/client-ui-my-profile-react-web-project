@@ -302,14 +302,15 @@ function withSessionLogs(tasks) {
         if (own.length === 0) {
             return list;
         }
+        const required = own.filter((task) => task.mandatory);
         const flexible = {
             id: log.id,
             category: log.category,
-            mandatory: own.some((task) => task.mandatory),
+            mandatory: required.length > 0,
             flexible: true,
             sessions: log.kind,
             roadmap: log.roadmap,
-            slots: own.filter((task) => task.mandatory).map((task) => task.minutes),
+            slots: (required.length > 0 ? required : own).map((task) => task.minutes),
             minutes: own.reduce((sum, task) => sum + task.minutes, 0),
             title: log.title,
             details: log.details,

@@ -65,7 +65,7 @@ export default function TodayPage() {
                             <span className="font-mono text-sm font-semibold">{Math.round(status.ratio * 100)}%</span>
                         </ProgressRing>
                         <p className="font-display text-3xl font-semibold">
-                            {status.mandatoryDone}<span className="text-faint">/{status.mandatoryTotal}</span>
+                            {status.doneUnits}<span className="text-faint">/{status.mandatoryTotal}</span>
                         </p>
                     </div>
                 </StatCard>

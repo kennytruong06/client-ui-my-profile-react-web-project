@@ -26,10 +26,10 @@ function Message({ status, current, t }) {
         return <p className="text-sm text-brand-300">{t('streak.perfect')}</p>;
     }
     if (status.kept) {
-        return <p className="text-sm text-brand-300">{t('streak.safe', { done: status.mandatoryDone, total: status.mandatoryTotal })}</p>;
+        return <p className="text-sm text-brand-300">{t('streak.safe', { done: status.doneUnits, total: status.mandatoryTotal })}</p>;
     }
     const key = current > 0 ? 'streak.needMore' : 'streak.needStart';
-    return <p className="text-sm text-amber-300">{t(key, { n: status.keepTarget - status.mandatoryDone })}</p>;
+    return <p className="text-sm text-amber-300">{t(key, { n: status.keepTarget - status.doneUnits })}</p>;
 }
 
 export default function StreakCard({ journal, today }) {

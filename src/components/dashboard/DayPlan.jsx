@@ -34,11 +34,11 @@ export default function DayPlan({ date }) {
         const Card = task.sessions ? SessionCard : TaskCard;
         return <Card key={task.id} date={date} task={task} record={recordOf(task.id)} disabled={isFuture} roadmapDay={roadmapDay} roadmapSuggestion={roadmapSuggestion} index={index} />;
     };
-    const countDone = (list) => `${list.filter((task) => day.tasks[task.id]?.status === 'done').length}/${list.length}`;
 
     const mandatory = tasks.filter((task) => task.mandatory);
     const optional = tasks.filter((task) => !task.mandatory);
     const mandatoryUnits = unitsOf(mandatory, day.tasks);
+    const optionalUnits = unitsOf(optional, day.tasks);
 
     return (
         <div className="space-y-8">
@@ -57,7 +57,7 @@ export default function DayPlan({ date }) {
             </Section>
 
             {optional.length > 0 && (
-                <Section title={t('day.optionalTitle')} count={countDone(optional)}>
+                <Section title={t('day.optionalTitle')} count={`${optionalUnits.done}/${optionalUnits.total}`}>
                     {optional.map(renderTask)}
                 </Section>
             )}

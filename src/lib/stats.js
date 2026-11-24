@@ -62,16 +62,18 @@ export function dayStatus(journal, key) {
     const optional = tasks.filter((task) => !task.mandatory);
     const optionalDone = optional.filter((task) => records[task.id]?.status === 'done').length;
     const keepTarget = Math.min(STREAK_MIN_UNITS, mandatoryUnits.total);
+    const doneUnits = mandatoryDone + unitsOf(optional, records).done;
     return {
         tasks,
         records,
         mandatoryTotal: mandatoryUnits.total,
         mandatoryDone,
+        doneUnits,
         optionalTotal: optional.length,
         optionalDone,
-        ratio: mandatoryUnits.total ? mandatoryDone / mandatoryUnits.total : 1,
+        ratio: mandatoryUnits.total ? Math.min(doneUnits / mandatoryUnits.total, 1) : 1,
         keepTarget,
-        kept: mandatoryDone >= keepTarget,
+        kept: doneUnits >= keepTarget,
     };
 }
 
@@ -174,7 +176,7 @@ export function streakDays(journal, today, count) {
         } else if (key === today) {
             state = 'pending';
         }
-        return { key, state, done: status.mandatoryDone, total: status.mandatoryTotal };
+        return { key, state, done: status.doneUnits, total: status.mandatoryTotal };
     });
 }
 

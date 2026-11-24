@@ -116,7 +116,7 @@ export default function CalendarPage() {
                                     </span>
                                     <span className="hidden w-full sm:block">
                                         {ratio != null && (
-                                            <span className="block font-mono text-[11px] text-muted">{status.mandatoryDone}/{status.mandatoryTotal}</span>
+                                            <span className="block font-mono text-[11px] text-muted">{status.doneUnits}/{status.mandatoryTotal}</span>
                                         )}
                                         <span className="mt-1 block h-1 w-full overflow-hidden rounded-full bg-white/5">
                                             <span className="block h-full rounded-full bg-brand-500" style={{ width: `${Math.round((ratio ?? 0) * 100)}%` }} />

@@ -101,7 +101,7 @@ function DayColumn({ date, weekday, ppm, compact, journal, today, now, onOpen })
                 >
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{t('weekdays.short')[weekday]}</span>
                     <span className={`font-display text-lg font-semibold ${isToday ? 'text-brand-300' : ''}`}>{fromKey(date).getDate()}</span>
-                    <span className="font-mono text-[10px] text-faint">{reveal ? `${status.mandatoryDone}/${status.mandatoryTotal}` : '·'}</span>
+                    <span className="font-mono text-[10px] text-faint">{reveal ? `${status.doneUnits}/${status.mandatoryTotal}` : '·'}</span>
                 </button>
             )}
             <div className="relative rounded-xl border border-line bg-ink-900/40" style={{ height }}>
