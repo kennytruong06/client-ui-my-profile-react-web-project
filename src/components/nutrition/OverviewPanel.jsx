@@ -7,6 +7,11 @@ import { addDays, formatShortDate, fromKey, rangeKeys, toKey, weekdayOf } from '
 import { dayTotals, eatingStateFn, mealBase, mealName, planForDate } from '@/lib/nutrition';
 
 const MODES = ['week', 'month'];
+const LEGEND = [
+    ['bg-brand-500', 'onTarget'],
+    ['bg-amber-400', 'over'],
+    ['bg-danger', 'surplus'],
+];
 
 function rangeOf(mode, anchor) {
     if (mode === 'week') {
@@ -75,7 +80,10 @@ function MealList({ entry }) {
 function DayRow({ row, ceiling, open, onToggle, onOpenDay }) {
     const { t } = useI18n();
     const date = fromKey(row.key);
-    const over = row.eaten > row.target;
+    const surplus = row.deficit < 0;
+    const over = !surplus && row.eaten > row.target;
+    const barTone = surplus ? 'bg-danger' : over ? 'bg-amber-400' : 'bg-brand-500';
+    const textTone = surplus ? 'text-danger' : over ? 'text-amber-300' : '';
     const state = row.state.state;
     const empty = !row.logged;
 
@@ -92,7 +100,7 @@ function DayRow({ row, ceiling, open, onToggle, onOpenDay }) {
                     ) : (
                         <>
                             <div className="h-1.5 overflow-hidden rounded-full bg-ink-800">
-                                <div className={`h-full rounded-full ${over ? 'bg-danger' : 'bg-brand-500'}`} style={{ width: `${Math.min(row.eaten / ceiling, 1) * 100}%` }} />
+                                <div className={`h-full rounded-full ${barTone}`} style={{ width: `${Math.min(row.eaten / ceiling, 1) * 100}%` }} />
                             </div>
                             <p className="mt-1 font-mono text-xs text-muted">{t('nutrition.overview.mealsCount', { n: row.entry.meals.length })}</p>
                         </>
@@ -101,7 +109,7 @@ function DayRow({ row, ceiling, open, onToggle, onOpenDay }) {
                 {!empty && (
                     <>
                         <div className="w-20 shrink-0 text-right">
-                            <p className={`font-mono text-sm ${over ? 'text-danger' : ''}`}>{Math.round(row.eaten)}</p>
+                            <p className={`font-mono text-sm ${textTone}`}>{Math.round(row.eaten)}</p>
                             <p className="font-mono text-[11px] text-faint">/ {row.target} kcal</p>
                         </div>
                         <div className="w-16 shrink-0 text-right">
@@ -110,7 +118,7 @@ function DayRow({ row, ceiling, open, onToggle, onOpenDay }) {
                         </div>
                         {row.isToday && <LuClock className="shrink-0 text-faint" size={16} title={t('nutrition.overview.ongoing')} />}
                         {!row.isToday && state === 'kept' && <LuCheck className="shrink-0 text-brand-400" size={16} />}
-                        {!row.isToday && state !== 'kept' && <LuCircleAlert className="shrink-0 text-amber-300" size={16} />}
+                        {!row.isToday && state !== 'kept' && <LuCircleAlert className={`shrink-0 ${row.deficit < 0 ? 'text-danger' : 'text-amber-300'}`} size={16} />}
                         <LuChevronDown size={16} className={`shrink-0 text-faint transition-transform ${open ? 'rotate-180' : ''}`} />
                     </>
                 )}
@@ -199,6 +207,15 @@ export default function OverviewPanel({ nutrition, plan, today, onOpenDay }) {
                 <Stat label={t('nutrition.overview.average')} value={average == null ? '–' : average} hint={t('nutrition.overview.averageHint', { n: plan.target })} />
                 <Stat label={t('nutrition.overview.totalDeficit')} value={logged.length ? signed(totalDeficit) : '–'} hint={logged.length ? t('nutrition.overview.kgHint', { kg: Math.abs(totalDeficit / 7700).toFixed(2), sign: totalDeficit >= 0 ? '−' : '+' }) : undefined} tone={totalDeficit >= 0 ? 'text-brand-300' : 'text-danger'} />
                 <Stat label={t('nutrition.overview.keptDays')} value={`${kept}/${finished.length}`} hint={t('nutrition.overview.keptHint')} />
+            </div>
+
+            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted">
+                {LEGEND.map(([tone, key]) => (
+                    <span key={key} className="flex items-center gap-1.5">
+                        <span className={`h-2 w-5 rounded-full ${tone}`} />
+                        {t(`nutrition.overview.legend.${key}`)}
+                    </span>
+                ))}
             </div>
 
             <ul className="space-y-1.5">

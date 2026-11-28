@@ -49,7 +49,7 @@ export function blocksForDate(date) {
         blocks.push({ id: `meal-${meal.id}`, kind: 'meal', meal: meal.id, start: minutesOfDay(meal.start), minutes: meal.minutes });
     });
 
-    tasksForDate(date).filter((task) => !task.flexible).forEach((task) => {
+    tasksForDate(date).flatMap((task) => (task.flexible ? task.plan ?? [] : [task])).forEach((task) => {
         blocks.push({ id: task.id, kind: 'task', task, start: minutesOfDay(task.start), minutes: task.minutes });
     });
 

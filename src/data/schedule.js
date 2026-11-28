@@ -1,4 +1,5 @@
 import { weekdayOf } from '@/lib/date';
+import { TRAINING_DAYS } from '@/data/training';
 
 export const CATEGORIES = ['exercise', 'english', 'skincare', 'guitar', 'piano'];
 
@@ -310,10 +311,11 @@ function withSessionLogs(tasks) {
             flexible: true,
             sessions: log.kind,
             roadmap: log.roadmap,
-            slots: (required.length > 0 ? required : own).map((task) => task.minutes),
+            slots: (required.length > 0 ? required : own).flatMap((task) => hourSlots(task.minutes)),
             minutes: own.reduce((sum, task) => sum + task.minutes, 0),
             title: log.title,
             details: log.details,
+            plan: own.filter((task) => task.options),
         };
         const index = list.findIndex((task) => task.category === log.category);
         return [...list.slice(0, index), flexible, ...list.slice(index).filter((task) => task.category !== log.category)];
@@ -323,11 +325,20 @@ function withSessionLogs(tasks) {
 export const BLOCK_MINUTES = 60;
 const BLOCK_CATEGORIES = ['english', 'guitar', 'piano'];
 
+function hourSlots(minutes) {
+    return Array.from({ length: Math.ceil(minutes / BLOCK_MINUTES) }, (_, index) => Math.min(BLOCK_MINUTES, minutes - index * BLOCK_MINUTES));
+}
+
 function hourlyBlocks(tasks) {
     return tasks.map((task) => (BLOCK_CATEGORIES.includes(task.category) ? { ...task, minutes: BLOCK_MINUTES } : task));
 }
 
 export const WEEK_TEMPLATE = Object.fromEntries(Object.entries(LEGACY_WEEK_TEMPLATE).map(([weekday, tasks]) => [weekday, withSessionLogs(hourlyBlocks(tasks))]));
+
+const TRAINING_TEMPLATE = Object.fromEntries(Object.entries(TRAINING_DAYS).map(([key, day]) => {
+    const rest = LEGACY_WEEK_TEMPLATE[weekdayOf(key)].filter((task) => task.category !== 'exercise' && !day.replaces.includes(task.id));
+    return [key, withSessionLogs(hourlyBlocks([...day.tasks, ...rest]))];
+}));
 
 export const WAKE_TIME = '05:00';
 export const BEDTIME = '23:00';
@@ -384,6 +395,9 @@ export function tasksForWeekday(weekday) {
 }
 
 export function tasksForDate(key) {
+    if (TRAINING_TEMPLATE[key]) {
+        return TRAINING_TEMPLATE[key];
+    }
     const template = key < SESSION_LOG_FROM ? LEGACY_WEEK_TEMPLATE : WEEK_TEMPLATE;
     return template[weekdayOf(key)] ?? [];
 }

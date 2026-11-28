@@ -15,6 +15,7 @@ import SchedulePage from '@/pages/dashboard/SchedulePage';
 import NutritionPage from '@/pages/dashboard/NutritionPage';
 import SettingsPage from '@/pages/dashboard/SettingsPage';
 import DailyPage from '@/pages/dashboard/DailyPage';
+import TrainingPage from '@/pages/dashboard/TrainingPage';
 import FocusPage from '@/pages/focus/FocusPage';
 
 function AnimatedRoutes() {
@@ -38,6 +39,7 @@ function AnimatedRoutes() {
                         <Route index element={<TodayPage />} />
                         <Route path="schedule" element={<SchedulePage />} />
                         <Route path="calendar" element={<CalendarPage />} />
+                        <Route path="training" element={<TrainingPage />} />
                         <Route path="english" element={<EnglishPage />} />
                         <Route path="nutrition" element={<NutritionPage />} />
                         <Route path="progress" element={<ProgressPage />} />

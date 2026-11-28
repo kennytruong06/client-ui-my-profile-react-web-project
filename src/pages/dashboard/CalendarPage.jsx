@@ -98,7 +98,6 @@ export default function CalendarPage() {
                             const inMonth = date.getMonth() === cursor.month;
                             const ratio = dayRatio(journal, key, today);
                             const status = dayStatus(journal, key);
-                            const hasNote = Boolean(journal.days[key]?.note);
                             const isSelected = key === selected;
                             const isToday = key === today;
 
@@ -122,9 +121,7 @@ export default function CalendarPage() {
                                             <span className="block h-full rounded-full bg-brand-500" style={{ width: `${Math.round((ratio ?? 0) * 100)}%` }} />
                                         </span>
                                     </span>
-                                    {ratio != null && status.kept && <LuFlame className="absolute right-1.5 top-1.5 text-orange-400" size={13} />}
-                                    {hasNote && <span className="absolute bottom-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-white/70 sm:bottom-auto sm:right-6 sm:top-2" />}
-                                </motion.button>
+                                    {ratio != null && status.kept && <LuFlame className="absolute right-1.5 top-1.5 text-orange-400" size={13} />}                                </motion.button>
                             );
                         })}
                     </motion.div>

@@ -216,6 +216,12 @@ export default function SessionCard({ date, task, record = EMPTY_RECORD, disable
                             <LuArrowRight size={14} />
                         </Link>
                     )}
+                    {task.plan?.length > 0 && (
+                        <Link to="/dashboard/training" className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-brand-400 hover:text-brand-300">
+                            {t('day.exercise.openPlan')}
+                            <LuArrowRight size={14} />
+                        </Link>
+                    )}
                 </div>
             </div>
 
